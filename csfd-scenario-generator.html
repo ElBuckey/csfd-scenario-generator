@@ -26,6 +26,23 @@
 @media(max-width:700px){.controls,.assessment-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ecg-grid{grid-template-columns:1fr}.calc-form,.infusion-form{grid-template-columns:1fr}.calc-form .student-submit-btn,.infusion-form .student-submit-btn{grid-column:auto}.aar-grid{grid-template-columns:1fr}}
 @media(max-width:480px){.controls,.assessment-grid,.ecg-form-grid{grid-template-columns:1fr}.modal-backdrop{padding:8px}.modal{padding:13px}.patient-banner{display:block}.protocol-chip{max-width:none}.aar-number{font-size:38px}}
 
+
+/* Feedback pass: neutral scenario header, printed 12-lead layout, and decision distractors */
+.protocol-chip{display:none!important}
+.ecg-scroll{overflow-x:auto;padding-bottom:4px}
+.ecg-grid{display:grid!important;grid-template-columns:repeat(4,minmax(210px,1fr))!important;gap:0!important;min-width:860px;border:1px solid #c88f8f;background:#fffafa}
+.ecg-lead{position:relative;border:0!important;border-right:1px solid #e3b0b0!important;border-bottom:1px solid #e3b0b0!important;border-radius:0!important}
+.ecg-lead:nth-child(4n){border-right:0!important}
+.ecg-lead:nth-last-child(-n+4){border-bottom:0!important}
+.lead-name{position:absolute;z-index:2;top:3px;left:5px;background:rgba(255,250,250,.78)!important;color:#181818!important;padding:1px 4px!important;border-radius:2px;font-size:12px!important}
+.ecg-paper{height:108px!important}
+.ecg-paper-footer{min-width:860px;background:#fffafa;color:#111;border:1px solid #c88f8f;border-top:0;padding:5px 8px;font-size:11px;display:flex;justify-content:space-between;gap:12px}
+.student-treatment-btn.attempted{border-color:#8b98a1;background:#41484d}
+.student-treatment-btn.incorrect-picked{border-color:#a86f39;background:#57391f}
+.aar-correct{color:#a9dbb5;font-weight:700}.aar-wrong{color:#ffb4b0;font-weight:700}
+@media(max-width:900px){.ecg-grid{grid-template-columns:repeat(4,minmax(210px,1fr))!important}.ecg-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.ecg-grid{grid-template-columns:repeat(4,minmax(210px,1fr))!important}.ecg-form-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -131,6 +148,16 @@ function procedure(id,label,group,procedureType,grade,minLevel,extra={}){return 
 function infusion(id,label,group,infusionType,grade,minLevel,extra={}){return {id,label,group,kind:'infusion',infusionType,grade,minLevel,...extra}}
 function fluid(id,label,group,grade,minLevel,expected,extra={}){return {id,label,group,kind:'fluid',grade,minLevel,expected,...extra}}
 
+function decoyMed(id,label,medKey,minLevel='Paramedic'){return {id,label,group:'Medications',kind:'decoyMed',medKey,grade:'incorrect',minLevel,decoy:true,note:'Medication is not indicated for this scenario.'}}
+function decoySimple(id,label,group,minLevel='EMT-B',concept=null){return {id,label,group,kind:'simple',grade:'incorrect',minLevel,decoy:true,concept:concept||id,note:'This intervention is not indicated for the current patient state.'}}
+const DISTRACTOR_BANK=[
+  decoyMed('decoy-aspirin','Aspirin','aspirin','EMT-B'),decoyMed('decoy-epi-im','Epinephrine','epiIM','EMT-B'),decoyMed('decoy-albuterol','Albuterol','albuterol','EMT-B'),decoyMed('decoy-benadryl','Diphenhydramine','benadryl','AEMT'),decoyMed('decoy-nitro','Nitroglycerin','nitro','Paramedic'),decoyMed('decoy-diltiazem','Diltiazem','diltiazem','Paramedic'),decoyMed('decoy-adenosine','Adenosine','adenosine','Paramedic'),decoyMed('decoy-amiodarone','Amiodarone','amiodarone','Paramedic'),decoyMed('decoy-atropine','Atropine','atropine','Paramedic'),decoyMed('decoy-magnesium','Magnesium Sulfate','magnesium','Paramedic'),decoyMed('decoy-midazolam','Midazolam','midazolam','Paramedic'),decoyMed('decoy-d10','Dextrose 10%','d10','Paramedic'),
+  decoySimple('decoy-bvm','Assist Ventilations with BVM','Airway / Breathing','EMT-B','bvm'),decoySimple('decoy-cpap','Apply CPAP','Airway / Breathing','EMT-B','cpap'),decoySimple('decoy-oxygen','High-Flow Oxygen','Airway / Breathing','EMT-B','oxygen'),decoySimple('decoy-iv','Establish IV Access','Circulation','AEMT','iv'),decoySimple('decoy-fluid','Administer Normal Saline Bolus','Circulation','AEMT','fluid'),decoySimple('decoy-cardioversion','Synchronized Cardioversion','Cardiac','Paramedic','cardioversion'),decoySimple('decoy-pacing','Transcutaneous Pacing','Cardiac','Paramedic','pacing'),decoySimple('decoy-decompress','Chest Decompression','Procedures','AEMT','chestDecompression'),decoySimple('decoy-stemi-alert','Activate STEMI Alert','Transport / Notification','Paramedic','stemi-alert'),decoySimple('decoy-sepsis-alert','Activate Sepsis Alert','Transport / Notification','EMT-B','sepsis-alert')
+];
+function actionConcept(a){if(a.medKey)return `med:${a.medKey}`;if(a.procedureType)return `procedure:${a.procedureType}`;if(a.infusionType)return `infusion:${a.infusionType}`;if(a.concept)return `simple:${a.concept}`;if(a.id==='iv'||a.id==='second-iv')return 'simple:iv';if(a.id.includes('stemi-alert'))return 'simple:stemi-alert';if(a.id.includes('sepsis-alert'))return 'simple:sepsis-alert';if(a.id==='bvm')return 'simple:bvm';if(a.id==='oxygen'||a.id==='oxygen-unneeded')return 'simple:oxygen';return `simple:${a.id}`}
+function shuffled(a){const out=[...a];for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[out[i],out[j]]=[out[j],out[i]]}return out}
+function pickDistractors(s){const existing=new Set((s.template.actions||[]).filter(a=>inScope(s.provider,a.minLevel||'EMT-B')).map(actionConcept));const eligible=DISTRACTOR_BANK.filter(a=>inScope(s.provider,a.minLevel||'EMT-B')&&!existing.has(actionConcept(a)));const meds=shuffled(eligible.filter(a=>a.kind==='decoyMed')).slice(0,inScope(s.provider,'Paramedic')?4:2);const nonMeds=shuffled(eligible.filter(a=>a.kind!=='decoyMed'));const chosen=[...meds];const desiredNonMeds=inScope(s.provider,'Paramedic')?3:2;const usedGroups=new Set();for(const a of nonMeds){if(chosen.length>=meds.length+desiredNonMeds)break;if(!usedGroups.has(a.group)){chosen.push(a);usedGroups.add(a.group)}}for(const a of nonMeds){if(chosen.length>=meds.length+desiredNonMeds)break;if(!chosen.includes(a))chosen.push(a)}return chosen}
+
 const SCENARIOS=[
   {
     id:'adult-chest-pain',condition:'Chest Pain / Suspected ACS',type:'Medical',minLevel:'EMT-B',patientGroups:['Adult','Geriatric'],protocolRefs:['6.06 Adult Chest Pain','2.10 12-Lead ECG'],
@@ -149,10 +176,10 @@ const SCENARIOS=[
     ],
     ecgRequiredCount:2,
     actions:[
-      med('asa','Administer Aspirin','Medications','aspirin','critical','EMT-B',s=>medExpected({dose:324,unit:'mg',route:['PO'],count:4})),
+      med('asa','Aspirin','Medications','aspirin','critical','EMT-B',s=>medExpected({dose:324,unit:'mg',route:['PO'],count:4})),
       simple('iv','Establish IV Access','Circulation','critical','AEMT'),
       simple('second-iv','Establish Second IV / Saline Lock','Circulation','beneficial','AEMT'),
-      med('nitro','Administer Nitroglycerin','Medications','nitro','critical','Paramedic',s=>medExpected({dose:0.4,unit:'mg',route:['SL'],count:1})),
+      med('nitro','Nitroglycerin','Medications','nitro','critical','Paramedic',s=>medExpected({dose:0.4,unit:'mg',route:['SL'],count:1})),
       simple('stemi-alert','Activate / Transmit STEMI Alert','Transport / Notification','critical','Paramedic'),
       simple('transport','Rapid Transport to PCI Facility','Transport / Notification','critical','EMT-B'),
       simple('oxygen-unneeded','Routine High-Flow Oxygen at SpO₂ ≥94%','Airway / Breathing','harmful','EMT-B')
@@ -176,8 +203,8 @@ const SCENARIOS=[
       {id:'ecg',label:'Cardiac Monitoring / ECG',critical:false,minLevel:'Paramedic',text:s=>'Sinus tachycardia without acute ischemic change.'}
     ],
     actions:[
-      med('epi-im','Epinephrine 1:1,000 IM','Medications','epiIM','critical','EMT-B',s=>medExpected({range:[0.3,0.5],unit:'mg',route:['IM']})),
-      med('albuterol','Albuterol Nebulizer','Medications','albuterol','beneficial','EMT-B',s=>medExpected({dose:2.5,unit:'mg',route:['NEB'],adminTime:null})),
+      med('epi-im','Epinephrine','Medications','epiIM','critical','EMT-B',s=>medExpected({range:[0.3,0.5],unit:'mg',route:['IM']})),
+      med('albuterol','Albuterol','Medications','albuterol','beneficial','EMT-B',s=>medExpected({dose:2.5,unit:'mg',route:['NEB'],adminTime:null})),
       simple('iv','Establish IV Access','Circulation','critical','AEMT'),
       med('benadryl','Diphenhydramine','Medications','benadryl','beneficial','AEMT',s=>medExpected({dose:50,unit:'mg',route:['IV','IM']})),
       med('solumedrol','Solu-Medrol','Medications','solumedrol','beneficial','Paramedic',s=>medExpected({dose:125,unit:'mg',route:['IV']})),
@@ -221,7 +248,7 @@ const SCENARIOS=[
       simple('sepsis-alert','Notify Receiving Hospital of Sepsis Alert','Transport / Notification','critical','EMT-B'),
       simple('oxygen','Oxygen if Indicated','Airway / Breathing','beneficial','EMT-B'),
       simple('iv','Establish IV Access','Circulation','critical','AEMT'),
-      fluid('ns-bolus','Normal Saline Bolus 20 mL/kg','Circulation','critical','AEMT',s=>Math.min(20*s.patient.weight,2000)),
+      fluid('ns-bolus','Normal Saline Bolus','Circulation','critical','AEMT',s=>Math.min(20*s.patient.weight,2000)),
       infusion('norepi','Build Norepinephrine Infusion','Drips / Infusions','norepi','critical','Paramedic'),
       simple('transport','Transport / Continued Reassessment','Transport / Notification','critical','EMT-B')
     ],
@@ -299,9 +326,9 @@ const SCENARIOS=[
     ],
     actions:[
       simple('iv','Establish IV Access','Circulation','critical','AEMT'),
-      med('amio','Amiodarone 150 mg over 10 Minutes','Medications','amiodarone','critical','Paramedic',s=>medExpected({dose:150,unit:'mg',route:['IV'],adminTime:10})),
-      med('magnesium','Magnesium Sulfate 2 g over 2 Minutes','Medications','magnesium','beneficial','Paramedic',s=>medExpected({dose:2,unit:'g',route:['IV'],adminTime:2})),
-      simple('amio-maint','Start Amiodarone Maintenance at 1 mg/min','Drips / Infusions','critical','Paramedic',{note:'The supplied CSFD text specifies 1 mg/min but does not provide a bag-mixing formula here; this build does not invent one.'}),
+      med('amio','Amiodarone','Medications','amiodarone','critical','Paramedic',s=>medExpected({dose:150,unit:'mg',route:['IV'],adminTime:10})),
+      med('magnesium','Magnesium Sulfate','Medications','magnesium','beneficial','Paramedic',s=>medExpected({dose:2,unit:'g',route:['IV'],adminTime:2})),
+      simple('amio-maint','Start Amiodarone Maintenance Infusion','Drips / Infusions','critical','Paramedic',{note:'The supplied CSFD text specifies 1 mg/min but does not provide a bag-mixing formula here; this build does not invent one.'}),
       simple('transport','Transport / Continuous Monitoring','Transport / Notification','critical','EMT-B')
     ],
     onAction:(s,r)=>{if(r.valid&&r.actionId==='amio')s.ecgIndex=1},
@@ -321,7 +348,7 @@ const SCENARIOS=[
       {rhythm:'Sinus rhythm',rate:()=>Math.floor(Math.random()*16)+80,qrs:'Narrow',territory:'None',st:{},note:'Sinus rhythm after magnesium.'}
     ],
     actions:[
-      med('mg-bolus','Magnesium Sulfate 2 g IVP over 1–2 Minutes','Medications','magnesium','critical','Paramedic',s=>medExpected({dose:2,unit:'g',route:['IV'],adminTime:[1,2]})),
+      med('mg-bolus','Magnesium Sulfate','Medications','magnesium','critical','Paramedic',s=>medExpected({dose:2,unit:'g',route:['IV'],adminTime:[1,2]})),
       infusion('mg-infusion','Build Magnesium Follow-Up Infusion','Drips / Infusions','magnesiumTorsades','critical','Paramedic'),
       simple('transport','Transport / Continuous Monitoring','Transport / Notification','critical','EMT-B')
     ],
@@ -370,8 +397,8 @@ const SCENARIOS=[
     actions:[
       simple('iv','Establish IV Access','Circulation','critical','AEMT'),
       simple('vagal','Ice Pack to Face / Vagal Maneuver','Cardiac','beneficial','Paramedic'),
-      med('adenosine1','Adenosine 0.1 mg/kg','Medications','adenosine','critical','Paramedic',s=>medExpected({dose:0.1*s.patient.weight,unit:'mg',route:['Rapid IV'],flush:5})),
-      med('adenosine2','Adenosine 0.2 mg/kg','Medications','adenosine','critical','Paramedic',s=>medExpected({dose:0.2*s.patient.weight,unit:'mg',route:['Rapid IV'],flush:5}),{requiredIf:s=>s.vars.pedSvtResistant}),
+      med('adenosine1','Adenosine — Initial Dose','Medications','adenosine','critical','Paramedic',s=>medExpected({dose:0.1*s.patient.weight,unit:'mg',route:['Rapid IV'],flush:5})),
+      med('adenosine2','Adenosine — Repeat Dose','Medications','adenosine','critical','Paramedic',s=>medExpected({dose:0.2*s.patient.weight,unit:'mg',route:['Rapid IV'],flush:5}),{requiredIf:s=>s.vars.pedSvtResistant}),
       simple('transport','Rapid Transport / Continuous Pulse Oximetry','Transport / Notification','critical','EMT-B')
     ],
     onAction:(s,r)=>{if(r.valid&&r.actionId==='adenosine1'&&!s.vars.pedSvtResistant)s.ecgIndex=1;if(r.valid&&r.actionId==='adenosine2')s.ecgIndex=1},
@@ -458,11 +485,12 @@ function buildSession(template,patient,provider,mode,progression){
   s.vars.bp=template.id==='adult-chest-pain'?Math.floor(Math.random()*22)+126:120;
   s.vars.spo2=template.id==='adult-chest-pain'?Math.floor(Math.random()*3)+95:97;
   if(template.initSession)template.initSession(s);
+  s.distractors=pickDistractors(s);
   return s;
 }
 
 function scopedAssessments(s){return (s.template.assessments||[]).filter(a=>inScope(s.provider,a.minLevel||'EMT-B'))}
-function scopedActions(s){return (s.template.actions||[]).filter(a=>inScope(s.provider,a.minLevel||'EMT-B'))}
+function scopedActions(s){return [...(s.template.actions||[]),...(s.distractors||[])].filter(a=>inScope(s.provider,a.minLevel||'EMT-B'))}
 function actionRequired(s,a){return a.grade==='critical'&&(!a.requiredIf||a.requiredIf(s))}
 
 function getExpected(s,a){return a.expected? a.expected(s):null}
@@ -493,8 +521,7 @@ function renderSession(parent,s,title='Patient'){
   const providerBadge=`<span class="badge">${esc(s.provider)}</span>`;
   wrap.innerHTML=`
     <div class="patient-banner">
-      <div><h2>${esc(title)} — ${esc(s.template.condition)}</h2><div class="meta"><span class="badge">${esc(s.template.type)}</span>${providerBadge}<span class="badge">${esc(patientText(s.patient))}</span><span class="badge">${esc(s.progression)}</span><span class="badge">${esc(s.mode)} Mode</span></div></div>
-      <div class="protocol-chip">CSFD: ${esc(s.template.protocolRefs.join(' • '))}</div>
+      <div><h2>${esc(title)}</h2><div class="meta"><span class="badge">${esc(s.template.type)}</span>${providerBadge}<span class="badge">${esc(patientText(s.patient))}</span><span class="badge">${esc(s.progression)}</span><span class="badge">${esc(s.mode)} Mode</span></div></div>
     </div>
     <div class="card dispatch"><h3>Dispatch</h3><p>${esc(replaceTokens(s.template.dispatch,s.patient))}</p></div>
     <div class="card scene"><h3>Scene</h3><p>${esc(replaceTokens(s.template.scene,s.patient))}</p></div>
@@ -570,7 +597,7 @@ function renderActions(wrap,s){
   Object.entries(groups).forEach(([g,items])=>{
     const section=document.createElement('div');section.className='tx-group';section.innerHTML=`<div class="tx-group-title">${esc(g)}</div><div class="tx-group-grid"></div>`;host.appendChild(section);
     const grid=section.querySelector('.tx-group-grid');
-    items.forEach(a=>{
+    shuffled(items).forEach(a=>{
       const b=document.createElement('button');b.type='button';b.className='student-treatment-btn';b.textContent=a.label;grid.appendChild(b);
       b.addEventListener('click',()=>performAction(wrap,s,a,b));
     });
@@ -579,9 +606,10 @@ function renderActions(wrap,s){
 
 function performAction(wrap,s,a,b){
   if(a.kind==='simple'){
-    const rec={actionId:a.id,label:a.label,time:s.elapsed,valid:a.grade!=='harmful',grade:a.grade,details:{note:a.note||''}};recordAction(wrap,s,a,b,rec);return;
+    const rec={actionId:a.id,label:a.label,time:s.elapsed,valid:!['harmful','incorrect'].includes(a.grade),grade:a.grade,details:{note:a.note||'',summary:a.note||''}};recordAction(wrap,s,a,b,rec);return;
   }
   if(a.kind==='med')openMedicationModal(wrap,s,a,b);
+  else if(a.kind==='decoyMed')openDecoyMedicationModal(wrap,s,a,b);
   else if(a.kind==='fluid')openFluidModal(wrap,s,a,b);
   else if(a.kind==='procedure')openProcedureModal(wrap,s,a,b);
   else if(a.kind==='infusion')openInfusionModal(wrap,s,a,b);
@@ -590,9 +618,11 @@ function performAction(wrap,s,a,b){
 function recordAction(wrap,s,a,b,rec){
   s.actionAttempts.push(rec);
   b.classList.add('selected');
-  if(a.grade!=='harmful'&&!a.repeatable)b.classList.add('done');
+  if(rec.valid&&a.grade!=='harmful'&&!a.repeatable)b.classList.add('done');
+  else if(!rec.valid&&a.grade==='incorrect')b.classList.add('incorrect-picked');
+  else if(!rec.valid&&a.grade!=='harmful')b.classList.add('attempted');
   if(a.grade==='harmful')b.classList.add('harmful-picked');
-  s.log(`${a.label} performed${rec.details&&rec.details.summary?`: ${rec.details.summary}`:''}.`,a.grade==='harmful'?'warn':'');
+  s.log(`${a.label} performed${rec.details&&rec.details.summary?`: ${rec.details.summary}`:''}.`,['harmful','incorrect'].includes(a.grade)?'warn':'');
   if(s.template.onAction)s.template.onAction(s,rec);
   if(s.mode==='FTO'){
     const f=rec.valid?'correct / protocol-consistent':'incorrect / incomplete';
@@ -631,6 +661,13 @@ function openMedicationModal(wrap,s,a,b){
     recordAction(wrap,s,a,b,{actionId:a.id,label:a.label,time:s.elapsed,valid,grade:a.grade,details});
     m.remove();
   });
+}
+
+function openDecoyMedicationModal(wrap,s,a,b){
+  const f=FORMULARY[a.medKey];if(!f){recordAction(wrap,s,a,b,{actionId:a.id,label:a.label,time:s.elapsed,valid:false,grade:'incorrect',details:{summary:'Medication selected'}});return}
+  const unit=f.doseUnit||f.concUnit||'mg';const countField=(f.tabletStrength||f.unitStrength)?`<label>Number of tablets / sprays / unit doses<input name="count" type="number" step="0.01" min="0"></label>`:'';const routes=['PO','SL','IM','IV','IO','IN','NEB','Rapid IV','IV/IO'].map(x=>`<option>${x}</option>`).join('');
+  const m=modalBase(a.label,`<div class="label-card"><div class="label-brand">AVAILABLE MEDICATION</div><strong>${esc(f.name)}</strong><div>${esc(f.display)}</div><div>Patient weight: <strong>${s.patient.weight} kg</strong></div></div><form class="calc-form"><label>Dose to administer (${esc(unit)})<input name="dose" type="number" step="0.001" min="0" required></label><label>Volume to draw (mL)<input name="volume" type="number" step="0.001" min="0"></label>${countField}<label>Route<select name="route">${routes}</select></label><button class="student-submit-btn" type="submit">ADMINISTER</button></form>`);
+  m.querySelector('form').addEventListener('submit',ev=>{ev.preventDefault();const fd=new FormData(ev.currentTarget);const dose=Number(fd.get('dose')),vol=Number(fd.get('volume')),count=Number(fd.get('count')),route=fd.get('route');let actualDose=dose;if(f.conc&&Number.isFinite(vol)&&vol>0)actualDose=vol*f.conc;else if(f.tabletStrength&&count)actualDose=count*f.tabletStrength;else if(f.unitStrength&&count)actualDose=count*f.unitStrength;const summary=`entered ${fmt(dose)} ${unit}${Number.isFinite(vol)&&vol>0?`, ${fmt(vol)} mL`:''}, ${route}${Number.isFinite(actualDose)?` → actual ${fmt(actualDose)} ${f.concUnit||unit}`:''}`;recordAction(wrap,s,a,b,{actionId:a.id,label:a.label,time:s.elapsed,valid:false,grade:'incorrect',details:{dose,volume:vol,count,route,actualDose,summary}});m.remove()});
 }
 
 function openFluidModal(wrap,s,a,b){
@@ -688,17 +725,16 @@ function reassess(wrap,s){
   const txt=s.template.reassess?s.template.reassess(s):'No major change. Continue assessment and protocol-based care.';wrap.querySelector('.state-text').textContent=txt;s.log(`Patient reassessed: ${txt}`,txt.toLowerCase().includes('improv')||txt.toLowerCase().includes('convert')?'good':'');
 }
 
+function ecgRegularity(rhythm){if(rhythm==='Atrial fibrillation'||rhythm==='Torsades de pointes'||rhythm==='Second-degree AV block Type II')return 'Irregular';return 'Regular'}
 function resolveEcgCfg(s){
   const raw=s.template.ecgSeries?.[Math.min(s.ecgIndex,(s.template.ecgSeries?.length||1)-1)];if(!raw)return null;
-  const val=k=>typeof raw[k]==='function'?raw[k](s):raw[k];return {...raw,rhythm:val('rhythm'),rate:val('rate'),qrs:val('qrs'),territory:val('territory')};
+  const val=k=>typeof raw[k]==='function'?raw[k](s):raw[k];const rhythm=val('rhythm');return {...raw,rhythm,rate:val('rate'),qrs:val('qrs'),territory:val('territory'),regularity:val('regularity')||ecgRegularity(rhythm)};
 }
-
 function renderECG(box,s){
   const cfg=resolveEcgCfg(s);if(!cfg){box.innerHTML='<h3>12-Lead ECG</h3><p>No 12-lead tracing is configured for this scenario.</p>';return}
-  const attempt={time:s.elapsed,cfg,answers:null,score:null};s.ecgAttempts.push(attempt);
-  const leads=['I','II','III','aVR','aVL','aVF','V1','V2','V3','V4','V5','V6'];
-  box.innerHTML=`<div class="ecg-head"><div><h3>12-Lead ECG #${s.ecgAttempts.length}</h3><div class="private-note">Synthetic training tracing generated from the current scenario state. Rate/morphology vary between runs.</div></div><span class="badge">${formatTime(s.elapsed)}</span></div><div class="ecg-grid">${leads.map(l=>`<div class="ecg-lead"><div class="lead-name">${l}</div>${makeLeadSVG(cfg,l,`${s.id}-${s.ecgAttempts.length}-${l}`)}</div>`).join('')}</div><form class="ecg-interpret"><h4>Interpret the tracing before moving on</h4><div class="ecg-form-grid"><label>Rhythm<select name="rhythm"><option>Sinus rhythm</option><option>Atrial fibrillation</option><option>SVT</option><option>Ventricular tachycardia</option><option>Torsades de pointes</option><option>Second-degree AV block Type II</option><option>Third-degree AV block</option><option>Paced rhythm</option></select></label><label>Estimated rate (bpm)<input name="rate" type="number" step="1"></label><label>QRS<select name="qrs"><option>Narrow</option><option>Wide</option></select></label><label>ST-elevation territory<select name="territory"><option>None</option><option>Inferior</option><option>Anterior</option><option>Lateral</option></select></label></div><button type="submit" class="student-submit-btn">SAVE ECG INTERPRETATION</button></form>${s.mode==='FTO'?`<div class="fto-answer"><strong>FTO answer:</strong> ${esc(cfg.rhythm)}, ~${cfg.rate} bpm, ${esc(cfg.qrs)} QRS, ST territory: ${esc(cfg.territory)}. ${esc(cfg.note||'')}</div>`:''}`;
-  box.querySelector('form').onsubmit=ev=>{ev.preventDefault();const fd=new FormData(ev.currentTarget),answers={rhythm:fd.get('rhythm'),rate:Number(fd.get('rate')),qrs:fd.get('qrs'),territory:fd.get('territory')};const parts={rhythm:answers.rhythm===cfg.rhythm,rate:near(answers.rate,cfg.rate,10),qrs:answers.qrs===cfg.qrs,territory:answers.territory===cfg.territory};attempt.answers=answers;attempt.score=Object.values(parts).filter(Boolean).length;attempt.parts=parts;ev.currentTarget.querySelector('button').disabled=true;ev.currentTarget.querySelector('button').textContent='INTERPRETATION SAVED';s.log(`12-lead interpretation saved: ${answers.rhythm}, ${answers.rate} bpm, ${answers.qrs}, ${answers.territory}.`)};
+  const attempt={time:s.elapsed,cfg,answers:null,score:null};s.ecgAttempts.push(attempt);const leads=['I','aVR','V1','V4','II','aVL','V2','V5','III','aVF','V3','V6'];
+  box.innerHTML=`<div class="ecg-head"><div><h3>12-Lead ECG #${s.ecgAttempts.length}</h3><div class="private-note">Synthetic training tracing generated from the current patient state. The layout follows the standard printed 3 × 4 lead arrangement.</div></div><span class="badge">${formatTime(s.elapsed)}</span></div><div class="ecg-scroll"><div class="ecg-grid">${leads.map(l=>`<div class="ecg-lead"><div class="lead-name">${l}</div>${makeLeadSVG(cfg,l,`${s.id}-${s.ecgAttempts.length}-${l}`)}</div>`).join('')}</div><div class="ecg-paper-footer"><span>25 mm/s • 10 mm/mV</span><span>Synthetic training ECG</span></div></div><form class="ecg-interpret"><h4>Interpret the tracing before moving on</h4><div class="ecg-form-grid"><label>Regularity<select name="regularity"><option>Regular</option><option>Irregular</option></select></label><label>Estimated rate (bpm)<input name="rate" type="number" step="1"></label><label>QRS<select name="qrs"><option>Narrow</option><option>Wide</option></select></label><label>ST-elevation territory<select name="territory"><option>None</option><option>Inferior</option><option>Septal</option><option>Anterior</option><option>Lateral</option></select></label></div><button type="submit" class="student-submit-btn">SAVE ECG INTERPRETATION</button></form>${s.mode==='FTO'?`<div class="fto-answer"><strong>FTO answer:</strong> ${esc(cfg.regularity)}, ~${cfg.rate} bpm, ${esc(cfg.qrs)} QRS, ST territory: ${esc(cfg.territory)}. Underlying rhythm: ${esc(cfg.rhythm)}. ${esc(cfg.note||'')}</div>`:''}`;
+  box.querySelector('form').onsubmit=ev=>{ev.preventDefault();const fd=new FormData(ev.currentTarget),answers={regularity:fd.get('regularity'),rate:Number(fd.get('rate')),qrs:fd.get('qrs'),territory:fd.get('territory')};const parts={regularity:answers.regularity===cfg.regularity,rate:near(answers.rate,cfg.rate,10),qrs:answers.qrs===cfg.qrs,territory:answers.territory===cfg.territory};attempt.answers=answers;attempt.score=Object.values(parts).filter(Boolean).length;attempt.parts=parts;ev.currentTarget.querySelector('button').disabled=true;ev.currentTarget.querySelector('button').textContent='INTERPRETATION SAVED';s.log(`12-lead interpretation saved: ${answers.regularity}, ${answers.rate} bpm, ${answers.qrs}, ST ${answers.territory}.`)};
 }
 
 function hashSeed(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
@@ -741,21 +777,18 @@ function buildWavePath(cfg,lead,w,h,base,st,rand){
 
 function renderAAR(wrap,s){
   if(s.ended)return;s.ended=true;s.running=false;if(s.timerId)clearTimeout(s.timerId);
-  const assess=scopedAssessments(s);const criticalAssess=assess.filter(a=>a.critical);const assessHits=criticalAssess.filter(a=>s.assessmentDone.has(a.id)).length;
-  const required=scopedActions(s).filter(a=>actionRequired(s,a));const actionHits=required.filter(a=>s.hasValid(a.id)).length;
-  const harmful=s.actionAttempts.filter(r=>{const a=scopedActions(s).find(x=>x.id===r.actionId);return a&&a.grade==='harmful'});
-  const medAttempts=s.actionAttempts.filter(r=>{const a=scopedActions(s).find(x=>x.id===r.actionId);return a&&['med','fluid','infusion'].includes(a.kind)});const medGood=medAttempts.filter(x=>x.valid).length;
-  const procAttempts=s.actionAttempts.filter(r=>{const a=scopedActions(s).find(x=>x.id===r.actionId);return a&&a.kind==='procedure'});const procGood=procAttempts.filter(x=>x.valid).length;
-  const ecgNeeded=inScope(s.provider,'Paramedic')&&s.template.ecgSeries?.length;const ecgDone=s.ecgAttempts.filter(x=>x.answers);const ecgPoints=ecgDone.reduce((n,x)=>n+(x.score||0),0),ecgMax=ecgDone.length*4;
-  const serialNeed=ecgNeeded?(s.template.ecgRequiredCount||1):0;const serialOK=!serialNeed||s.ecgAttempts.length>=serialNeed;
-  const assessmentPct=criticalAssess.length?assessHits/criticalAssess.length:1;const actionPct=required.length?actionHits/required.length:1;const medPct=medAttempts.length?medGood/medAttempts.length:1;const procPct=procAttempts.length?procGood/procAttempts.length:1;const ecgPct=ecgMax?ecgPoints/ecgMax:(ecgNeeded?0:1);
-  let overall=Math.round(100*(assessmentPct*.2+actionPct*.35+medPct*.2+procPct*.1+ecgPct*.15));overall-=harmful.length*10;if(!serialOK)overall-=5;overall=clamp(overall,0,100);
-  const missingAssess=criticalAssess.filter(a=>!s.assessmentDone.has(a.id)).map(a=>a.label);
-  const missingActions=required.filter(a=>!s.hasValid(a.id)).map(a=>expectedActionText(s,a));
-  const calcRows=medAttempts.map(r=>{const a=scopedActions(s).find(x=>x.id===r.actionId);return `<tr><td>${esc(a?.label||r.label)}</td><td>${r.valid?'Correct':'Needs review'}</td><td>${esc(r.details?.summary||'')}</td></tr>`}).join('');
-  const ecgRows=ecgDone.map((x,i)=>`<tr><td>#${i+1} at ${formatTime(x.time)}</td><td>${x.score}/4</td><td>${esc(`${x.answers.rhythm}, ${x.answers.rate} bpm, ${x.answers.qrs}, ${x.answers.territory}`)}</td><td>${esc(`${x.cfg.rhythm}, ~${x.cfg.rate} bpm, ${x.cfg.qrs}, ${x.cfg.territory}`)}</td></tr>`).join('');
-  const out=wrap.querySelector('.aar-output');out.innerHTML=`<div class="card aar-card"><div class="aar-score"><div class="aar-number">${overall}%</div><div><h3>After-Action Review</h3><div class="diagnosis-title">${esc(s.template.diagnosis)}</div><div class="private-note">Provider level: ${esc(s.provider)} • Scenario time: ${formatTime(s.elapsed)}</div></div></div><div class="aar-grid"><div><strong>Assessment</strong><span>${Math.round(assessmentPct*100)}%</span></div><div><strong>Protocol Actions</strong><span>${Math.round(actionPct*100)}%</span></div><div><strong>Medication / Math</strong><span>${Math.round(medPct*100)}%</span></div><div><strong>Procedures</strong><span>${Math.round(procPct*100)}%</span></div><div><strong>ECG Interpretation</strong><span>${Math.round(ecgPct*100)}%</span></div></div>${missingAssess.length?`<div class="aar-section"><h4>Missed Critical Assessments</h4><ul>${missingAssess.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''}${missingActions.length?`<div class="aar-section"><h4>Missing / Incorrect Critical Actions</h4><ul>${missingActions.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''}${harmful.length?`<div class="aar-section"><h4>Potentially Harmful / Incorrect Actions</h4><ul>${harmful.map(x=>`<li>${esc(x.label)}</li>`).join('')}</ul></div>`:''}${calcRows?`<div class="aar-section"><h4>Medication / Calculation Review</h4><div class="table-wrap"><table><thead><tr><th>Action</th><th>Result</th><th>What was entered / delivered</th></tr></thead><tbody>${calcRows}</tbody></table></div></div>`:''}${ecgRows?`<div class="aar-section"><h4>ECG Review</h4><div class="table-wrap"><table><thead><tr><th>Tracing</th><th>Score</th><th>Your interpretation</th><th>Scenario state</th></tr></thead><tbody>${ecgRows}</tbody></table></div>${!serialOK?`<div class="deadline-banner">Serial ECG requirement not met. This scenario expected at least ${serialNeed} tracing(s).</div>`:''}</div>`:''}<div class="aar-section"><h4>CSFD Protocol References Used in This Scenario</h4><p>${esc(s.template.protocolRefs.join(' • '))}</p></div></div>`;
-  out.scrollIntoView({behavior:'smooth',block:'start'});
+  const actions=scopedActions(s);const assess=scopedAssessments(s);const criticalAssess=assess.filter(a=>a.critical);const assessHits=criticalAssess.filter(a=>s.assessmentDone.has(a.id)).length;
+  const required=actions.filter(a=>actionRequired(s,a));const actionHits=required.filter(a=>s.hasValid(a.id)).length;
+  const harmful=s.actionAttempts.filter(r=>{const a=actions.find(x=>x.id===r.actionId);return a&&a.grade==='harmful'});const incorrect=s.actionAttempts.filter(r=>{const a=actions.find(x=>x.id===r.actionId);return a&&a.grade==='incorrect'});
+  const medKinds=['med','decoyMed','fluid','infusion'];const requiredMed=required.filter(a=>medKinds.includes(a.kind));const attemptedMedActions=actions.filter(a=>medKinds.includes(a.kind)&&s.latestAttempt(a.id));const medScoreActions=[...new Map([...requiredMed,...attemptedMedActions].map(a=>[a.id,a])).values()];const medGood=medScoreActions.filter(a=>s.hasValid(a.id)).length;
+  const requiredProc=required.filter(a=>a.kind==='procedure');const attemptedProcActions=actions.filter(a=>a.kind==='procedure'&&s.latestAttempt(a.id));const procScoreActions=[...new Map([...requiredProc,...attemptedProcActions].map(a=>[a.id,a])).values()];const procGood=procScoreActions.filter(a=>s.hasValid(a.id)).length;
+  const ecgNeeded=inScope(s.provider,'Paramedic')&&s.template.ecgSeries?.length;const ecgDone=s.ecgAttempts.filter(x=>x.answers);const ecgPoints=ecgDone.reduce((n,x)=>n+(x.score||0),0),ecgMax=ecgDone.length*4;const serialNeed=ecgNeeded?(s.template.ecgRequiredCount||1):0;const serialOK=!serialNeed||s.ecgAttempts.length>=serialNeed;
+  const assessmentPct=criticalAssess.length?assessHits/criticalAssess.length:1;const actionPct=required.length?actionHits/required.length:1;const medPct=medScoreActions.length?medGood/medScoreActions.length:1;const procPct=procScoreActions.length?procGood/procScoreActions.length:1;const ecgPct=ecgMax?ecgPoints/ecgMax:(ecgNeeded?0:1);
+  let overall=Math.round(100*(assessmentPct*.2+actionPct*.35+medPct*.2+procPct*.1+ecgPct*.15));overall-=harmful.length*10;overall-=incorrect.length*4;if(!serialOK)overall-=5;overall=clamp(overall,0,100);
+  const missingAssess=criticalAssess.filter(a=>!s.assessmentDone.has(a.id)).map(a=>a.label);const missingActions=required.filter(a=>!s.hasValid(a.id)).map(a=>expectedActionText(s,a));
+  const reviewActions=actions.filter(a=>['med','fluid','infusion','decoyMed'].includes(a.kind)&&(actionRequired(s,a)||s.latestAttempt(a.id)));const calcRows=reviewActions.map(a=>{const r=s.latestAttempt(a.id);const result=!r?'Missed':r.valid?'Correct':a.grade==='incorrect'?'Incorrect medication choice':'Needs review';const entered=r?.details?.summary||'No dose / calculation entered';const correct=a.grade==='incorrect'?'Not indicated for this scenario.':expectedActionText(s,a);return `<tr><td>${esc(a.label)}</td><td class="${r?.valid?'aar-correct':'aar-wrong'}">${esc(result)}</td><td>${esc(entered)}</td><td>${esc(correct)}</td></tr>`}).join('');
+  const ecgRows=ecgDone.map((x,i)=>`<tr><td>#${i+1} at ${formatTime(x.time)}</td><td>${x.score}/4</td><td>${esc(`${x.answers.regularity}, ${x.answers.rate} bpm, ${x.answers.qrs}, ST ${x.answers.territory}`)}</td><td>${esc(`${x.cfg.regularity}, ~${x.cfg.rate} bpm, ${x.cfg.qrs}, ST ${x.cfg.territory}; underlying rhythm: ${x.cfg.rhythm}`)}</td></tr>`).join('');
+  const out=wrap.querySelector('.aar-output');out.innerHTML=`<div class="card aar-card"><div class="aar-score"><div class="aar-number">${overall}%</div><div><h3>After-Action Review</h3><div class="diagnosis-title">${esc(s.template.diagnosis)}</div><div class="private-note">Provider level: ${esc(s.provider)} • Scenario time: ${formatTime(s.elapsed)}</div></div></div><div class="aar-grid"><div><strong>Assessment</strong><span>${Math.round(assessmentPct*100)}%</span></div><div><strong>Protocol Actions</strong><span>${Math.round(actionPct*100)}%</span></div><div><strong>Medication / Math</strong><span>${Math.round(medPct*100)}%</span></div><div><strong>Procedures</strong><span>${Math.round(procPct*100)}%</span></div><div><strong>ECG Interpretation</strong><span>${Math.round(ecgPct*100)}%</span></div></div>${missingAssess.length?`<div class="aar-section"><h4>Missed Critical Assessments</h4><ul>${missingAssess.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''}${missingActions.length?`<div class="aar-section"><h4>Missing / Incorrect Critical Actions</h4><ul>${missingActions.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''}${incorrect.length?`<div class="aar-section"><h4>Incorrect / Unnecessary Actions</h4><ul>${incorrect.map(x=>`<li>${esc(x.label)}${x.details?.summary?` — ${esc(x.details.summary)}`:''}</li>`).join('')}</ul></div>`:''}${harmful.length?`<div class="aar-section"><h4>Potentially Harmful Actions</h4><ul>${harmful.map(x=>`<li>${esc(x.label)}</li>`).join('')}</ul></div>`:''}${calcRows?`<div class="aar-section"><h4>Medication / Calculation Review</h4><div class="table-wrap"><table><thead><tr><th>Action</th><th>Result</th><th>What you entered / delivered</th><th>Correct answer</th></tr></thead><tbody>${calcRows}</tbody></table></div></div>`:''}${ecgRows?`<div class="aar-section"><h4>ECG Review</h4><div class="table-wrap"><table><thead><tr><th>Tracing</th><th>Score</th><th>Your interpretation</th><th>Correct interpretation</th></tr></thead><tbody>${ecgRows}</tbody></table></div>${!serialOK?`<div class="deadline-banner">Serial ECG requirement not met. This scenario expected at least ${serialNeed} tracing(s).</div>`:''}</div>`:''}<div class="aar-section"><h4>CSFD Protocol References Used in This Scenario</h4><p>${esc(s.template.protocolRefs.join(' • '))}</p></div></div>`;out.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 function selectedProvider(){return $('provider').value}
