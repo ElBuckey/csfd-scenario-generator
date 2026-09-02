@@ -49,7 +49,8 @@
 .ecg-rhythm-wrap{min-width:860px;border:1px solid #c88f8f;border-top:0;background:#fffafa;position:relative}.ecg-rhythm-label{position:absolute;z-index:2;top:4px;left:7px;color:#111;font-size:12px;font-weight:800;background:rgba(255,250,250,.82);padding:1px 4px;border-radius:2px}.ecg-rhythm-paper{display:block;width:100%;height:118px}.ecg-paper-footer{border-top:0!important}.calc-breakdown{display:grid;gap:4px;font-size:13px;line-height:1.35}.calc-breakdown div{border-bottom:1px dotted #56616a;padding-bottom:3px}.calc-breakdown div:last-child{border-bottom:0}.calc-emphasis{font-weight:800}.infusion-step{grid-column:1/-1;background:#111c25;border:1px solid #465866;border-radius:8px;padding:8px 10px;font-size:12px;color:#bcd0dc;font-weight:800;letter-spacing:.35px}.math-note{grid-column:1/-1;color:#9fb0bd;font-size:12px;line-height:1.45;margin-top:-4px}.toolbox-note{font-size:12px;color:#9fb0bd;margin-top:-2px}
 
 
-.fto-notes{border-left-color:#3a6f8f}.fto-notes textarea{width:100%;min-height:150px;resize:vertical;background:#111c25;color:#eef3f7;border:1px solid #4d5c68;border-radius:8px;padding:11px;font:14px/1.45 Arial,sans-serif}.fto-notes .private-note{margin-bottom:9px}.aar-export-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;padding-top:14px;border-top:1px solid #4d5c68}.aar-export-actions button{flex:1;min-width:210px;min-height:46px;border:1px solid #4d5c68;border-radius:8px;background:#253542;color:#fff;font-weight:800;cursor:pointer}.aar-export-actions button.primary{background:#801a17;border-color:#801a17}.aar-export-actions button:hover{filter:brightness(1.1)}
+.container.fto-active{max-width:1380px}.scenario-shell.fto-layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:18px;align-items:start}.scenario-shell.fto-layout>.session-main{grid-column:1;grid-row:1;min-width:0}.scenario-shell.fto-layout>.fto-notes{grid-column:2;grid-row:1;position:sticky;top:14px;z-index:40;max-height:calc(100vh - 28px);overflow:auto;margin-bottom:0;border-left-color:#3a6f8f;box-shadow:0 8px 26px rgba(0,0,0,.32)}.fto-notes textarea{width:100%;min-height:220px;resize:vertical;background:#111c25;color:#eef3f7;border:1px solid #4d5c68;border-radius:8px;padding:11px;font:14px/1.45 Arial,sans-serif}.fto-notes .private-note{margin-bottom:9px}.fto-notes-pin{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:5px 8px;border-radius:999px;background:#172733;border:1px solid #3f596b;color:#b9d5e5;font-size:11px;font-weight:800;letter-spacing:.25px}.aar-export-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;padding-top:14px;border-top:1px solid #4d5c68}.aar-export-actions button{flex:1;min-width:210px;min-height:46px;border:1px solid #4d5c68;border-radius:8px;background:#253542;color:#fff;font-weight:800;cursor:pointer}.aar-export-actions button.primary{background:#801a17;border-color:#801a17}.aar-export-actions button:hover{filter:brightness(1.1)}
+@media(max-width:1100px){.container.fto-active{max-width:1000px}.scenario-shell.fto-layout{grid-template-columns:1fr}.scenario-shell.fto-layout>.fto-notes{grid-column:1;grid-row:1;top:8px;max-height:38vh}.scenario-shell.fto-layout>.session-main{grid-column:1;grid-row:2}.fto-notes textarea{min-height:100px;max-height:22vh}}
 </style>
 </head>
 <body>
@@ -671,9 +672,9 @@ function expectedActionText(s,a){
 }
 
 function renderSession(parent,s,title='Patient'){
-  const wrap=document.createElement('div'); wrap.className='scenario-shell'; wrap.id=s.id; parent.appendChild(wrap);
+  const wrap=document.createElement('div'); wrap.className=`scenario-shell${s.mode==='FTO'?' fto-layout':''}`; wrap.id=s.id; parent.appendChild(wrap);
   const providerBadge=`<span class="badge">${esc(s.provider)}</span>`;
-  wrap.innerHTML=`
+  wrap.innerHTML=`<div class="session-main">
     <div class="patient-banner">
       <div><h2>${esc(title)}</h2><div class="meta"><span class="badge">${esc(s.template.type)}</span>${providerBadge}<span class="badge">${esc(patientText(s.patient))}</span><span class="badge">${esc(s.progression)}</span><span class="badge">${esc(s.mode)} Mode</span></div></div>
     </div>
@@ -687,7 +688,7 @@ function renderSession(parent,s,title='Patient'){
     <div class="student-treatment-panel"><h3>Treatments / Interventions</h3><p class="student-treatment-help">Use the same broad provider-level toolbox you would have available on other calls; the list is intentionally not narrowed to this scenario. Medication labels and carried concentrations are shown when selected, but indication, dose, route, and calculation are yours to determine.</p><div class="toolbox-note">Expand a category to view its options. Unnecessary choices may be acceptable, incorrect, or harmful depending on the patient state.</div><div class="treatment-workbench"></div></div>
     <div class="card timeline"><div class="timeline-title">Scenario Timeline</div><div class="timeline-list"><div class="timeline-entry"><span class="timeline-time">00:00</span><span class="timeline-text">Scenario loaded — timer paused.</span></div></div></div>
     <button type="button" class="diagnosis-btn end-aar">END SCENARIO / AFTER-ACTION REVIEW</button>
-    <div class="aar-output"></div>`;
+    <div class="aar-output"></div></div>`;
   if(s.mode==='FTO')renderFTOReference(wrap,s);
   wireClock(wrap,s);
   renderAssessments(wrap,s);
@@ -702,7 +703,9 @@ function renderFTOReference(wrap,s){
   const td=traumaDecision(s);
   const traumaExtra=td?`<li>Trauma activation: ${esc(td.activation||'No automatic activation criterion identified; provider judgment still applies.')}</li><li>Spinal motion restriction: ${td.smr?'Indicated by generated findings.':'Not automatically indicated by generated findings.'}</li><li>Second IV: ${td.secondIVRequired?'Required because blood products are in use.':td.secondIVBeneficial?'Appropriate / beneficial in this severe-trauma context.':'Optional unless the clinical picture changes.'}</li>`:'';
   const extra=(s.vars.captureThreshold?`<li>Simulated pacing capture threshold: ${s.vars.captureThreshold} mA.</li>`:'')+traumaExtra;
-  wrap.insertAdjacentHTML('afterbegin',`<div class="card fto-actions"><div class="fto-private">FTO / INSTRUCTOR REFERENCE</div><div class="diagnosis-title">${esc(s.template.diagnosis)}</div><div class="action-groups"><div class="action-group action-critical"><h4>Critical Assessments</h4><ul class="detail-list">${assessments||'<li>None beyond universal care.</li>'}</ul></div><div class="action-group action-expected"><h4>Critical Actions in Selected Scope</h4><ul class="detail-list">${actions||'<li>None.</li>'}${extra}</ul></div></div></div><div class="card fto-notes"><div class="fto-private">FTO / INSTRUCTOR NOTES</div><div class="private-note">Use this for coaching points, observed performance, scene-management notes, or anything you want preserved in the completed scenario export.</div><textarea class="fto-notes-input" placeholder="Enter instructor notes..."></textarea></div>`);
+  const main=wrap.querySelector('.session-main');
+  main.insertAdjacentHTML('afterbegin',`<div class="card fto-actions"><div class="fto-private">FTO / INSTRUCTOR REFERENCE</div><div class="diagnosis-title">${esc(s.template.diagnosis)}</div><div class="action-groups"><div class="action-group action-critical"><h4>Critical Assessments</h4><ul class="detail-list">${assessments||'<li>None beyond universal care.</li>'}</ul></div><div class="action-group action-expected"><h4>Critical Actions in Selected Scope</h4><ul class="detail-list">${actions||'<li>None.</li>'}${extra}</ul></div></div></div>`);
+  wrap.insertAdjacentHTML('beforeend',`<aside class="card fto-notes"><div class="fto-private">FTO / INSTRUCTOR NOTES</div><div class="private-note">Use this for coaching points, observed performance, scene-management notes, or anything you want preserved in the completed scenario export.</div><div class="fto-notes-pin">📌 PINNED WHILE YOU SCROLL</div><textarea class="fto-notes-input" placeholder="Enter instructor notes..."></textarea></aside>`);
   const notes=wrap.querySelector('.fto-notes-input');
   notes.value=s.ftoNotes||'';
   notes.addEventListener('input',()=>{s.ftoNotes=notes.value});
@@ -1094,7 +1097,7 @@ function updateSpecific(){
 }
 function updateFormat(){const isMci=$('scenarioFormat').value==='MCI';$('patientCountWrap').style.display=isMci?'block':'none'}
 function generate(){
-  const out=$('scenario');out.innerHTML='';out.style.display='block';let pool=poolFor();const specific=$('mode').value==='FTO'?$('specific').value:'Random';if(specific!=='Random')pool=pool.filter(s=>s.id===specific);
+  const out=$('scenario');out.innerHTML='';out.style.display='block';document.querySelector('.container').classList.toggle('fto-active',$('mode').value==='FTO');let pool=poolFor();const specific=$('mode').value==='FTO'?$('specific').value:'Random';if(specific!=='Random')pool=pool.filter(s=>s.id===specific);
   if(!pool.length){out.innerHTML='<h2>Scenario</h2><div class="empty">No validated CSFD scenario in this build matches those selections yet. Choose another provider level, patient group, or scenario type.</div>';return}
   const count=$('scenarioFormat').value==='MCI'?Number($('patientCount').value)||3:1;
   const picked=[];const copy=[...pool];while(picked.length<count&&copy.length){picked.push(copy.splice(Math.floor(Math.random()*copy.length),1)[0])}while(picked.length<count)picked.push(rnd(pool));
