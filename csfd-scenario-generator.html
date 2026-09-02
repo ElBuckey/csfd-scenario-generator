@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EMS Scenario Generator</title>
+<title>CSFD EMS Scenario Generator</title>
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#2b2b2b;color:#fff}header{background:#3a3a3a;padding:20px;text-align:center;border-bottom:3px solid #801a17}header h1{margin:0}header p{margin:6px 0 0;color:#b8c1c8}.top-nav{display:flex;justify-content:center;gap:10px;margin-top:14px;flex-wrap:wrap}.top-nav a{color:#fff;text-decoration:none;background:#253542;border:1px solid #4d5c68;padding:8px 14px;border-radius:999px;font-size:14px}.top-nav a:hover,.top-nav a.active{background:#801a17;border-color:#801a17}.container{max-width:1000px;margin:auto;padding:20px}.section{background:#3a3a3a;padding:20px;margin-bottom:20px;border-radius:10px}.section h2{margin-top:0;border-bottom:1px solid #344451;padding-bottom:10px}.controls{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}label{display:block;margin-bottom:6px;color:#d5dce1}select{width:100%;min-height:44px;padding:10px 12px;background:#2b2b2b;color:#fff;border:1px solid #4d5c68;border-radius:6px;font-size:15px}.generate{width:100%;min-height:54px;border:none;border-radius:8px;background:#801a17;color:#fff;font-size:18px;font-weight:bold;cursor:pointer}.generate:hover{background:#681512}.scenario{display:none}.meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.badge{background:#253542;border:1px solid #4d5c68;border-radius:999px;padding:6px 10px;font-size:13px}.card{background:#2b2b2b;border-radius:8px;padding:17px;margin-bottom:14px;border-left:4px solid #4d5c68}.card h3{margin:0 0 9px;font-size:18px}.card p{margin:0;line-height:1.6;color:#d9e0e5}.dispatch{border-left-color:#801a17}.scene{border-left-color:#7d98a1}.reveal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:15px 0}.reveal-btn,.stage-btn,.diagnosis-btn{min-height:46px;border:1px solid #4d5c68;border-radius:7px;background:#253542;color:#fff;font-weight:bold;cursor:pointer;padding:10px}.reveal-btn:hover,.stage-btn:hover{background:#344957}.reveal-btn.revealed{background:#344451;color:#aebac3;cursor:default}.hidden-info{display:none}.stage-card{border-left-color:#f0a202}.stage-card.critical{border-left-color:#801a17}.diagnosis-btn{width:100%;background:#801a17;border-color:#801a17;font-size:16px;margin-top:8px}.diagnosis-btn:hover{background:#681512}.diagnosis-card{display:none;border:2px solid #801a17;background:#25171a}.diagnosis-title{font-size:24px;font-weight:bold;margin-bottom:10px}.subheading{font-weight:bold;margin:13px 0 5px}.detail-list{margin:0;padding-left:21px;line-height:1.6;color:#d9e0e5}.fto-title{font-size:12px;font-weight:bold;letter-spacing:.7px;color:#ffbbc1;margin-bottom:6px}.notice{font-size:13px;color:#9caab5;text-align:center;line-height:1.5;margin-top:20px}.empty{background:#2b2b2b;padding:18px;border-radius:8px;color:#d9e0e5}.stage-controls{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.stage-btn{flex:1;min-width:180px}.scenario-counter{color:#9caab5;font-size:13px;margin-top:8px;text-align:center}.treatment-panel{border-left-color:#3fa36c}.treatment-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:12px 0}.treatment-option{display:flex;align-items:center;gap:8px;background:#3a3a3a;border:1px solid #4d5c68;border-radius:7px;padding:10px;cursor:pointer}.treatment-option input{accent-color:#801a17;transform:scale(1.15)}.reassess-btn{width:100%;min-height:50px;border:0;border-radius:7px;background:#3a6f8f;color:white;font-weight:bold;font-size:16px;cursor:pointer}.response-card{margin-top:12px;border-left:4px solid #f0a202}.response-card.improved{border-left-color:#3fa36c}.response-card.worse{border-left-color:#801a17}.response-card.stable{border-left-color:#f0a202}.fto-private{font-size:12px;color:#ffbbc1;font-weight:bold;letter-spacing:.5px;margin-bottom:6px}.treatment-history{font-size:13px;color:#aebac3;margin-top:8px}@media(max-width:700px){.treatment-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:850px){.controls{grid-template-columns:repeat(2,1fr)}.controls>div:last-child{grid-column:span 2}.reveal-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:520px){.container{padding:12px}.section{padding:15px}.controls{grid-template-columns:1fr}.controls>div:last-child{grid-column:auto}.reveal-grid{grid-template-columns:1fr}}
 
@@ -42,6 +42,11 @@
 .aar-correct{color:#a9dbb5;font-weight:700}.aar-wrong{color:#ffb4b0;font-weight:700}
 @media(max-width:900px){.ecg-grid{grid-template-columns:repeat(4,minmax(210px,1fr))!important}.ecg-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:700px){.ecg-grid{grid-template-columns:repeat(4,minmax(210px,1fr))!important}.ecg-form-grid{grid-template-columns:1fr}}
+
+
+/* Full-scope toolbox + 6-second rhythm strip */
+.tx-group{padding:0!important;overflow:hidden}.tx-group>summary{list-style:none;cursor:pointer;padding:11px 12px;background:#262f35;font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:#d4dde3;font-weight:800;display:flex;align-items:center;justify-content:space-between;gap:10px}.tx-group>summary::-webkit-details-marker{display:none}.tx-group>summary::after{content:"+";font-size:18px;line-height:1}.tx-group[open]>summary::after{content:"−"}.tx-group .tx-group-grid{padding:10px;margin:0!important}.toolbox-count{font-size:11px;color:#9fb0bd;font-weight:600;text-transform:none;letter-spacing:0;margin-left:auto}
+.ecg-rhythm-wrap{min-width:860px;border:1px solid #c88f8f;border-top:0;background:#fffafa;position:relative}.ecg-rhythm-label{position:absolute;z-index:2;top:4px;left:7px;color:#111;font-size:12px;font-weight:800;background:rgba(255,250,250,.82);padding:1px 4px;border-radius:2px}.ecg-rhythm-paper{display:block;width:100%;height:118px}.ecg-paper-footer{border-top:0!important}.calc-breakdown{display:grid;gap:4px;font-size:13px;line-height:1.35}.calc-breakdown div{border-bottom:1px dotted #56616a;padding-bottom:3px}.calc-breakdown div:last-child{border-bottom:0}.calc-emphasis{font-weight:800}.infusion-step{grid-column:1/-1;background:#111c25;border:1px solid #465866;border-radius:8px;padding:8px 10px;font-size:12px;color:#bcd0dc;font-weight:800;letter-spacing:.35px}.math-note{grid-column:1/-1;color:#9fb0bd;font-size:12px;line-height:1.45;margin-top:-4px}.toolbox-note{font-size:12px;color:#9fb0bd;margin-top:-2px}
 
 </style>
 </head>
@@ -97,7 +102,21 @@ const FORMULARY={
   d10:{name:'Dextrose 10%',display:'25 g / 250 mL (0.1 g/mL)',conc:0.1,concUnit:'g',doseUnit:'g'},
   norepi:{name:'Norepinephrine (Levophed)',display:'1 mg/mL — 4 mL vial',conc:1,concUnit:'mg',doseUnit:'mcg/min'},
   ketamine:{name:'Ketamine',display:'100 mg/mL — 5 mL vial',conc:100,concUnit:'mg',doseUnit:'mg'},
-  rocuronium:{name:'Rocuronium',display:'100 mg / 10 mL (10 mg/mL)',conc:10,concUnit:'mg',doseUnit:'mg'}
+  rocuronium:{name:'Rocuronium',display:'100 mg / 10 mL (10 mg/mL)',conc:10,concUnit:'mg',doseUnit:'mg'},
+  dexamethasone:{name:'Dexamethasone (Decadron)',display:'10 mg/mL — 1 mL vial',conc:10,concUnit:'mg',doseUnit:'mg'},
+  epi10k:{name:'Epinephrine 1:10,000',display:'1 mg / 10 mL (0.1 mg/mL)',conc:0.1,concUnit:'mg',doseUnit:'mg'},
+  racemicEpi:{name:'Racemic Epinephrine',display:'2.25% solution — 0.5 mL',doseUnit:'mL'},
+  etomidate:{name:'Etomidate (Amidate)',display:'40 mg / 20 mL (2 mg/mL)',conc:2,concUnit:'mg',doseUnit:'mg'},
+  lidocaine:{name:'Lidocaine',display:'100 mg / 5 mL (20 mg/mL)',conc:20,concUnit:'mg',doseUnit:'mg'},
+  naloxone:{name:'Naloxone (Narcan)',display:'2 mg / 2 mL (1 mg/mL)',conc:1,concUnit:'mg',doseUnit:'mg'},
+  ondansetron:{name:'Ondansetron (Zofran)',display:'4 mg / 2 mL (2 mg/mL) or 4 mg ODT',conc:2,concUnit:'mg',doseUnit:'mg'},
+  oralGlucose:{name:'Oral Glucose',display:'15 g tube',doseUnit:'g'},
+  sodiumBicarb:{name:'Sodium Bicarbonate',display:'50 mEq adult syringe / 5 mEq infant syringe',doseUnit:'mEq'},
+  thiamine:{name:'Thiamine',display:'200 mg / 2 mL (100 mg/mL)',conc:100,concUnit:'mg',doseUnit:'mg'},
+  txa:{name:'Tranexamic Acid (TXA)',display:'100 mg/mL — 10 mL vial',conc:100,concUnit:'mg',doseUnit:'mg'},
+  calcium:{name:'Calcium Gluconate 10%',display:'100 mg/mL — 10 mL vial',conc:100,concUnit:'mg',doseUnit:'mg'},
+  d50:{name:'Dextrose 50%',display:'25 g / 50 mL (0.5 g/mL)',conc:0.5,concUnit:'g',doseUnit:'g'},
+  tetracaine:{name:'Tetracaine',display:'0.5% ophthalmic solution',doseUnit:'drops'}
 };
 
 const HANDTEVY=[
@@ -148,15 +167,104 @@ function procedure(id,label,group,procedureType,grade,minLevel,extra={}){return 
 function infusion(id,label,group,infusionType,grade,minLevel,extra={}){return {id,label,group,kind:'infusion',infusionType,grade,minLevel,...extra}}
 function fluid(id,label,group,grade,minLevel,expected,extra={}){return {id,label,group,kind:'fluid',grade,minLevel,expected,...extra}}
 
-function decoyMed(id,label,medKey,minLevel='Paramedic'){return {id,label,group:'Medications',kind:'decoyMed',medKey,grade:'incorrect',minLevel,decoy:true,note:'Medication is not indicated for this scenario.'}}
-function decoySimple(id,label,group,minLevel='EMT-B',concept=null){return {id,label,group,kind:'simple',grade:'incorrect',minLevel,decoy:true,concept:concept||id,note:'This intervention is not indicated for the current patient state.'}}
-const DISTRACTOR_BANK=[
-  decoyMed('decoy-aspirin','Aspirin','aspirin','EMT-B'),decoyMed('decoy-epi-im','Epinephrine','epiIM','EMT-B'),decoyMed('decoy-albuterol','Albuterol','albuterol','EMT-B'),decoyMed('decoy-benadryl','Diphenhydramine','benadryl','AEMT'),decoyMed('decoy-nitro','Nitroglycerin','nitro','Paramedic'),decoyMed('decoy-diltiazem','Diltiazem','diltiazem','Paramedic'),decoyMed('decoy-adenosine','Adenosine','adenosine','Paramedic'),decoyMed('decoy-amiodarone','Amiodarone','amiodarone','Paramedic'),decoyMed('decoy-atropine','Atropine','atropine','Paramedic'),decoyMed('decoy-magnesium','Magnesium Sulfate','magnesium','Paramedic'),decoyMed('decoy-midazolam','Midazolam','midazolam','Paramedic'),decoyMed('decoy-d10','Dextrose 10%','d10','Paramedic'),
-  decoySimple('decoy-bvm','Assist Ventilations with BVM','Airway / Breathing','EMT-B','bvm'),decoySimple('decoy-cpap','Apply CPAP','Airway / Breathing','EMT-B','cpap'),decoySimple('decoy-oxygen','High-Flow Oxygen','Airway / Breathing','EMT-B','oxygen'),decoySimple('decoy-iv','Establish IV Access','Circulation','AEMT','iv'),decoySimple('decoy-fluid','Administer Normal Saline Bolus','Circulation','AEMT','fluid'),decoySimple('decoy-cardioversion','Synchronized Cardioversion','Cardiac','Paramedic','cardioversion'),decoySimple('decoy-pacing','Transcutaneous Pacing','Cardiac','Paramedic','pacing'),decoySimple('decoy-decompress','Chest Decompression','Procedures','AEMT','chestDecompression'),decoySimple('decoy-stemi-alert','Activate STEMI Alert','Transport / Notification','Paramedic','stemi-alert'),decoySimple('decoy-sepsis-alert','Activate Sepsis Alert','Transport / Notification','EMT-B','sepsis-alert')
+function decoyMed(id,label,medKey,minLevel='Paramedic'){return {id,label,group:'Medications',kind:'decoyMed',medKey,grade:'incorrect',minLevel,decoy:true,note:'Medication is not indicated for the current patient state.'}}
+function decoySimple(id,label,group,minLevel='EMT-B',concept=null,grade='acceptable'){return {id,label,group,kind:'simple',grade,minLevel,decoy:true,concept:concept||id,note:grade==='incorrect'?'This intervention is not indicated for the current patient state.':'Available intervention; use only when clinically indicated.'}}
+function decoyInfusion(id,label,infusionType,minLevel='Paramedic'){return {id,label,group:'Drips / Infusions',kind:'infusion',infusionType,grade:'incorrect',minLevel,decoy:true,note:'This infusion is not indicated for the current patient state.'}}
+const TOOLBOX_BANK=[
+  // Assessment / monitoring choices remain visible as interventions so the answer is not telegraphed by a short list.
+  decoySimple('tool-cardiac-monitor','Cardiac Monitoring','Assessment / Monitoring','Paramedic','cardiac-monitor'),
+  decoySimple('tool-pulseox','Continuous Pulse Oximetry','Assessment / Monitoring','EMT-B','pulseox'),
+  decoySimple('tool-etco2','Continuous EtCO₂ Monitoring','Assessment / Monitoring','EMT-B','etco2'),
+  decoySimple('tool-bgl','Blood Glucose Check','Assessment / Monitoring','EMT-B','bgl'),
+  decoySimple('tool-temp','Temperature','Assessment / Monitoring','EMT-B','temperature'),
+  decoySimple('tool-serial-vitals','Serial Vital Signs','Assessment / Monitoring','EMT-B','serial-vitals'),
+
+  // Airway / breathing.
+  decoySimple('tool-nc','Nasal Cannula Oxygen','Airway / Breathing','EMT-B','oxygen'),
+  decoySimple('tool-nrb','Non-Rebreather Oxygen','Airway / Breathing','EMT-B','oxygen'),
+  decoySimple('tool-bvm','Assist Ventilations with BVM','Airway / Breathing','EMT-B','bvm'),
+  decoySimple('tool-opa','OPA','Airway / Breathing','EMT-B','opa'),
+  decoySimple('tool-npa','NPA','Airway / Breathing','EMT-B','npa'),
+  decoySimple('tool-sga','Supraglottic Airway','Airway / Breathing','EMT-B','sga'),
+  decoySimple('tool-suction','Airway Suctioning','Airway / Breathing','EMT-B','suction'),
+  decoySimple('tool-cpap','Apply CPAP','Airway / Breathing','EMT-B','cpap'),
+  decoySimple('tool-et-intubation','Endotracheal Intubation','Airway / Breathing','AEMT','et-intubation'),
+  decoySimple('tool-cric','Cricothyrotomy','Airway / Breathing','AEMT','cricothyrotomy','incorrect'),
+
+  // Vascular / circulation.
+  decoySimple('tool-iv','Establish IV Access','Vascular / Fluids / Blood','AEMT','iv'),
+  decoySimple('tool-io','Establish IO Access','Vascular / Fluids / Blood','AEMT','io'),
+  decoySimple('tool-saline-lock','Saline Lock','Vascular / Fluids / Blood','AEMT','saline-lock'),
+  decoySimple('tool-second-iv','Second IV Access','Vascular / Fluids / Blood','AEMT','second-iv'),
+  decoySimple('tool-ns-bolus','Normal Saline Bolus','Vascular / Fluids / Blood','AEMT','fluid'),
+  decoySimple('tool-whole-blood','Whole Blood Transfusion','Vascular / Fluids / Blood','Paramedic','whole-blood','incorrect'),
+
+  // Medications: broad carried/used toolbox; scenario-specific copies override these entries when actually indicated.
+  decoyMed('tool-aspirin','Aspirin','aspirin','EMT-B'),
+  decoyMed('tool-epi-im','Epinephrine 1:1,000 IM','epiIM','EMT-B'),
+  decoyMed('tool-albuterol','Albuterol','albuterol','EMT-B'),
+  decoyMed('tool-duoneb','Ipratropium / Albuterol (DuoNeb)','duoneb','EMT-B'),
+  decoyMed('tool-oral-glucose','Oral Glucose','oralGlucose','EMT-B'),
+  decoyMed('tool-benadryl','Diphenhydramine','benadryl','AEMT'),
+  decoyMed('tool-apap','Acetaminophen','apap','Paramedic'),
+  decoyMed('tool-adenosine','Adenosine','adenosine','Paramedic'),
+  decoyMed('tool-amiodarone','Amiodarone','amiodarone','Paramedic'),
+  decoyMed('tool-atropine','Atropine','atropine','Paramedic'),
+  decoyMed('tool-calcium','Calcium Gluconate','calcium','Paramedic'),
+  decoyMed('tool-d10','Dextrose 10%','d10','Paramedic'),
+  decoyMed('tool-d50','Dextrose 50%','d50','Paramedic'),
+  decoyMed('tool-dexamethasone','Dexamethasone','dexamethasone','Paramedic'),
+  decoyMed('tool-diltiazem','Diltiazem','diltiazem','Paramedic'),
+  decoyMed('tool-epi10k','Epinephrine 1:10,000','epi10k','Paramedic'),
+  decoyMed('tool-etomidate','Etomidate','etomidate','Paramedic'),
+  decoyMed('tool-fentanyl','Fentanyl','fentanyl','Paramedic'),
+  decoyMed('tool-ketamine','Ketamine','ketamine','Paramedic'),
+  decoyMed('tool-lidocaine','Lidocaine','lidocaine','Paramedic'),
+  decoyMed('tool-magnesium','Magnesium Sulfate','magnesium','Paramedic'),
+  decoyMed('tool-midazolam','Midazolam','midazolam','Paramedic'),
+  decoyMed('tool-naloxone','Naloxone','naloxone','Paramedic'),
+  decoyMed('tool-nitro','Nitroglycerin','nitro','Paramedic'),
+  decoyMed('tool-ondansetron','Ondansetron','ondansetron','Paramedic'),
+  decoyMed('tool-racemic-epi','Racemic Epinephrine','racemicEpi','Paramedic'),
+  decoyMed('tool-rocuronium','Rocuronium','rocuronium','Paramedic'),
+  decoyMed('tool-bicarb','Sodium Bicarbonate','sodiumBicarb','Paramedic'),
+  decoyMed('tool-solumedrol','Solu-Medrol','solumedrol','Paramedic'),
+  decoyMed('tool-thiamine','Thiamine','thiamine','Paramedic'),
+  decoyMed('tool-txa','Tranexamic Acid (TXA)','txa','Paramedic'),
+
+  // Drips / infusions.
+  decoyInfusion('tool-norepi-infusion','Build Norepinephrine Infusion','norepi','Paramedic'),
+  decoyInfusion('tool-mag-infusion','Build Magnesium Infusion','magnesiumTorsades','Paramedic'),
+
+  // Cardiac / electrical and procedures.
+  decoySimple('tool-vagal','Vagal Maneuver','Cardiac / Electrical','Paramedic','vagal'),
+  decoySimple('tool-pacing','Transcutaneous Pacing','Cardiac / Electrical','Paramedic','pacing','incorrect'),
+  decoySimple('tool-cardioversion','Synchronized Cardioversion','Cardiac / Electrical','Paramedic','cardioversion','incorrect'),
+  decoySimple('tool-defib','Defibrillation','Cardiac / Electrical','Paramedic','defibrillation','incorrect'),
+  decoySimple('tool-decompress','Chest Decompression','Trauma / Procedures','AEMT','chestDecompression','incorrect'),
+  decoySimple('tool-tourniquet','Tourniquet','Trauma / Procedures','EMT-B','tourniquet'),
+  decoySimple('tool-wound-pack','Wound Packing / Hemostatic Gauze','Trauma / Procedures','EMT-B','wound-packing'),
+  decoySimple('tool-chest-seal','Occlusive Chest Seal','Trauma / Procedures','EMT-B','chest-seal'),
+  decoySimple('tool-splint','Extremity Splinting','Trauma / Procedures','EMT-B','splint'),
+  decoySimple('tool-traction','Traction Splint','Trauma / Procedures','EMT-B','traction-splint'),
+  decoySimple('tool-pelvic','Pelvic Binder','Trauma / Procedures','EMT-B','pelvic-binder'),
+  decoySimple('tool-smr','Spinal Motion Restriction','Trauma / Procedures','EMT-B','smr'),
+
+  // Destination / notifications.
+  decoySimple('tool-transport','Initiate Transport','Transport / Notification','EMT-B','transport'),
+  decoySimple('tool-stemi-alert','STEMI Alert / 12-Lead Transmission','Transport / Notification','Paramedic','stemi-alert'),
+  decoySimple('tool-stroke-alert','Stroke Alert','Transport / Notification','EMT-B','stroke-alert'),
+  decoySimple('tool-sepsis-alert','Sepsis Alert','Transport / Notification','EMT-B','sepsis-alert'),
+  decoySimple('tool-trauma-alert','Trauma Activation / Notification','Transport / Notification','EMT-B','trauma-alert'),
+  decoySimple('tool-med-control','Contact Medical Control','Transport / Notification','EMT-B','medical-control')
 ];
-function actionConcept(a){if(a.medKey)return `med:${a.medKey}`;if(a.procedureType)return `procedure:${a.procedureType}`;if(a.infusionType)return `infusion:${a.infusionType}`;if(a.concept)return `simple:${a.concept}`;if(a.id==='iv'||a.id==='second-iv')return 'simple:iv';if(a.id.includes('stemi-alert'))return 'simple:stemi-alert';if(a.id.includes('sepsis-alert'))return 'simple:sepsis-alert';if(a.id==='bvm')return 'simple:bvm';if(a.id==='oxygen'||a.id==='oxygen-unneeded')return 'simple:oxygen';return `simple:${a.id}`}
+function actionConcept(a){if(a.medKey)return `med:${a.medKey}`;if(a.procedureType)return `procedure:${a.procedureType}`;if(a.infusionType)return `infusion:${a.infusionType}`;if(a.concept)return `simple:${a.concept}`;if(a.id==='iv')return 'simple:iv';if(a.id==='second-iv')return 'simple:second-iv';if(a.id.includes('stemi-alert'))return 'simple:stemi-alert';if(a.id.includes('sepsis-alert'))return 'simple:sepsis-alert';if(a.id==='bvm')return 'simple:bvm';if(a.id==='oxygen'||a.id==='oxygen-unneeded')return 'simple:oxygen';if(a.id==='transport')return 'simple:transport';return `simple:${a.id}`}
 function shuffled(a){const out=[...a];for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[out[i],out[j]]=[out[j],out[i]]}return out}
-function pickDistractors(s){const existing=new Set((s.template.actions||[]).filter(a=>inScope(s.provider,a.minLevel||'EMT-B')).map(actionConcept));const eligible=DISTRACTOR_BANK.filter(a=>inScope(s.provider,a.minLevel||'EMT-B')&&!existing.has(actionConcept(a)));const meds=shuffled(eligible.filter(a=>a.kind==='decoyMed')).slice(0,inScope(s.provider,'Paramedic')?4:2);const nonMeds=shuffled(eligible.filter(a=>a.kind!=='decoyMed'));const chosen=[...meds];const desiredNonMeds=inScope(s.provider,'Paramedic')?3:2;const usedGroups=new Set();for(const a of nonMeds){if(chosen.length>=meds.length+desiredNonMeds)break;if(!usedGroups.has(a.group)){chosen.push(a);usedGroups.add(a.group)}}for(const a of nonMeds){if(chosen.length>=meds.length+desiredNonMeds)break;if(!chosen.includes(a))chosen.push(a)}return chosen}
+function pickDistractors(s){
+  const actual=(s.template.actions||[]).filter(a=>inScope(s.provider,a.minLevel||'EMT-B'));
+  const existing=new Set(actual.map(actionConcept));
+  return TOOLBOX_BANK.filter(a=>inScope(s.provider,a.minLevel||'EMT-B')&&!existing.has(actionConcept(a)));
+}
 
 const SCENARIOS=[
   {
@@ -254,8 +362,8 @@ const SCENARIOS=[
     ],
     deterioration:{seconds:300,requires:['ns-bolus'],text:'Hypotension persists with worsening confusion.'},
     reassess:s=>{
-      const n=s.latestValid('norepi');
-      if(n){const d=n.details.actualDose||0;const bp=Math.round(82+clamp(d,0,20)*1.3);return `After the infusion is running, estimated SBP improves to about ${bp} mmHg. Continue titration toward the protocol blood-pressure goal and reassess frequently.`}
+      const n=s.latestAttempt('norepi');
+      if(n&&Number.isFinite(n.details?.actualDose)){const d=n.details.actualDose||0;const bp=Math.round(82+clamp(d,0,20)*1.3);return `After the infusion is running, estimated SBP improves to about ${bp} mmHg. Continue titration toward the protocol blood-pressure goal and reassess frequently.`}
       if(s.hasValid('ns-bolus'))return 'After the calculated fluid bolus, SBP remains 84 mmHg. This patient is still hypotensive and requires escalation within protocol.';
       return 'The patient remains hypotensive and confused.';
     }
@@ -530,7 +638,7 @@ function renderSession(parent,s,title='Patient'){
       <div class="patient-state"><span class="stage-indicator">CURRENT STATE</span><h4>Patient Response / Reassessment</h4><div class="state-text">No reassessment performed yet.</div><button type="button" class="reassess-btn secondary">REASSESS PATIENT</button></div>
     </div>
     <div class="card assessment-card"><h3>Assessment Workup</h3><p class="student-treatment-help">Information is revealed only when you obtain it. 12-leads are generated from the current patient state and vary between runs.</p><div class="assessment-grid"></div><div class="assessment-results"></div></div>
-    <div class="student-treatment-panel"><h3>Treatments / Interventions</h3><p class="student-treatment-help">Perform the actions you would actually do. Medication labels and carried concentrations are shown when selected; you must enter the protocol dose and calculation.</p><div class="treatment-workbench"></div></div>
+    <div class="student-treatment-panel"><h3>Treatments / Interventions</h3><p class="student-treatment-help">Use the same broad provider-level toolbox you would have available on other calls; the list is intentionally not narrowed to this scenario. Medication labels and carried concentrations are shown when selected, but indication, dose, route, and calculation are yours to determine.</p><div class="toolbox-note">Expand a category to view its options. Unnecessary choices may be acceptable, incorrect, or harmful depending on the patient state.</div><div class="treatment-workbench"></div></div>
     <div class="card timeline"><div class="timeline-title">Scenario Timeline</div><div class="timeline-list"><div class="timeline-entry"><span class="timeline-time">00:00</span><span class="timeline-text">Scenario loaded — timer paused.</span></div></div></div>
     <button type="button" class="diagnosis-btn end-aar">END SCENARIO / AFTER-ACTION REVIEW</button>
     <div class="aar-output"></div>`;
@@ -593,9 +701,12 @@ function performAssessment(wrap,s,a,b){
 
 function renderActions(wrap,s){
   const host=wrap.querySelector('.treatment-workbench');
-  const groups={};scopedActions(s).forEach(a=>{(groups[a.group]??=[]).push(a)});
-  Object.entries(groups).forEach(([g,items])=>{
-    const section=document.createElement('div');section.className='tx-group';section.innerHTML=`<div class="tx-group-title">${esc(g)}</div><div class="tx-group-grid"></div>`;host.appendChild(section);
+  const groupName=g=>g==='Circulation'?'Vascular / Fluids / Blood':g==='Cardiac'?'Cardiac / Electrical':g==='Procedures'?'Trauma / Procedures':g;
+  const groups={};scopedActions(s).forEach(a=>{const g=groupName(a.group);(groups[g]??=[]).push(a)});
+  const preferred=['Assessment / Monitoring','Airway / Breathing','Vascular / Fluids / Blood','Medications','Drips / Infusions','Cardiac / Electrical','Trauma / Procedures','Transport / Notification'];
+  const entries=Object.entries(groups).sort((a,b)=>{const ai=preferred.indexOf(a[0]),bi=preferred.indexOf(b[0]);return (ai<0?99:ai)-(bi<0?99:bi)||a[0].localeCompare(b[0])});
+  entries.forEach(([g,items],idx)=>{
+    const section=document.createElement('details');section.className='tx-group';if(idx<2)section.open=true;section.innerHTML=`<summary>${esc(g)}<span class="toolbox-count">${items.length} options</span></summary><div class="tx-group-grid"></div>`;host.appendChild(section);
     const grid=section.querySelector('.tx-group-grid');
     shuffled(items).forEach(a=>{
       const b=document.createElement('button');b.type='button';b.className='student-treatment-btn';b.textContent=a.label;grid.appendChild(b);
@@ -618,8 +729,8 @@ function performAction(wrap,s,a,b){
 function recordAction(wrap,s,a,b,rec){
   s.actionAttempts.push(rec);
   b.classList.add('selected');
-  if(rec.valid&&a.grade!=='harmful'&&!a.repeatable)b.classList.add('done');
-  else if(!rec.valid&&a.grade==='incorrect')b.classList.add('incorrect-picked');
+  if(rec.valid&&!['harmful','incorrect'].includes(a.grade)&&!a.repeatable)b.classList.add('done');
+  else if(a.grade==='incorrect')b.classList.add('incorrect-picked');
   else if(!rec.valid&&a.grade!=='harmful')b.classList.add('attempted');
   if(a.grade==='harmful')b.classList.add('harmful-picked');
   s.log(`${a.label} performed${rec.details&&rec.details.summary?`: ${rec.details.summary}`:''}.`,['harmful','incorrect'].includes(a.grade)?'warn':'');
@@ -701,24 +812,28 @@ function openInfusionModal(wrap,s,a,b){
 }
 
 function openNorepiModal(wrap,s,a,b){
-  const f=FORMULARY.norepi;const hint=s.mode==='FTO'?'<div class="fto-answer"><strong>Expected mixture:</strong> 2 mg (2 mL) in 250 mL NS = 8 mcg/mL using 60 gtt/mL tubing. Dose 2–20 mcg/min.</div>':'';
-  const m=modalBase(a.label,`<div class="label-card"><div class="label-brand">AVAILABLE MEDICATION</div><strong>${f.name}</strong><div>${f.display}</div><div>Available NS bags: 100 / 250 / 1000 mL</div><div>Available tubing: 10 / 60 gtt/mL</div></div>${hint}<form class="calc-form infusion-form"><label>Amount of norepinephrine to add (mg)<input name="mg" type="number" step="0.01"></label><label>Volume of norepinephrine drawn (mL)<input name="drugVol" type="number" step="0.01"></label><label>Bag selected (mL)<select name="bag"><option>100</option><option>250</option><option>1000</option></select></label><label>Final concentration you calculated (mcg/mL)<input name="conc" type="number" step="0.01"></label><label>Tubing selected (gtt/mL)<select name="drop"><option>10</option><option>60</option></select></label><label>Desired dose (mcg/min)<input name="desired" type="number" step="0.1"></label><label>Drip rate (gtt/min)<input name="gtt" type="number" step="1"></label><button class="student-submit-btn">START INFUSION</button></form>`);
+  const f=FORMULARY.norepi;const hint=s.mode==='FTO'?'<div class="fto-answer"><strong>Expected mixture:</strong> 2 mg (2 mL) in 250 mL NS = 8 mcg/mL using 60 gtt/mL tubing. Select a clinically appropriate dose from 2–20 mcg/min and calculate the gravity rate.</div>':'';
+  const m=modalBase(a.label,`<div class="label-card"><div class="label-brand">AVAILABLE MEDICATION</div><strong>${f.name}</strong><div>${f.display}</div><div>Available NS bags: 100 / 250 / 1000 mL</div><div>Available tubing: 10 / 60 gtt/mL</div></div>${hint}<form class="calc-form infusion-form"><div class="infusion-step">STEP 1 — BUILD THE BAG</div><label>Amount of norepinephrine you intend to add (mg)<input name="mg" type="number" step="0.01"></label><label>Volume drawn from vial (mL)<input name="drugVol" type="number" step="0.01"></label><label>Bag selected (mL)<select name="bag"><option>100</option><option selected>250</option><option>1000</option></select></label><div class="infusion-step">STEP 2 — DETERMINE CONCENTRATION</div><label>Final concentration you calculated (mcg/mL)<input name="conc" type="number" step="0.01"></label><div></div><div class="infusion-step">STEP 3 — SELECT DOSE AND TUBING</div><label>Desired dose (mcg/min)<input name="desired" type="number" step="0.1"></label><label>Tubing selected (gtt/mL)<select name="drop"><option>10</option><option>60</option></select></label><div class="infusion-step">STEP 4 — CALCULATE GRAVITY RATE</div><label>Drip rate to run (gtt/min)<input name="gtt" type="number" step="1"></label><div class="math-note">The simulator calculates the dose the patient actually receives from the physical mixture, selected tubing, and gtt/min you enter. A wrong bag mixture therefore changes the delivered dose even if the drip-rate arithmetic is internally correct.</div><button class="student-submit-btn">START INFUSION</button></form>`);
   m.querySelector('form').onsubmit=ev=>{ev.preventDefault();const fd=new FormData(ev.currentTarget);const mg=Number(fd.get('mg')),drugVol=Number(fd.get('drugVol')),bag=Number(fd.get('bag')),enteredConc=Number(fd.get('conc')),drop=Number(fd.get('drop')),desired=Number(fd.get('desired')),gtt=Number(fd.get('gtt'));
     const actualMg=drugVol*f.conc;const actualConc=actualMg*1000/bag;const actualDose=gtt*actualConc/drop;
     const mixtureOK=near(mg,2,0.05)&&near(drugVol,2,0.05)&&bag===250;
-    const concStatementOK=near(enteredConc,actualConc,0.15)&&near(enteredConc,8,0.15);
+    const statedAmountMatchesVial=near(mg,actualMg,0.05);
+    const concentrationMathOK=near(enteredConc,actualConc,0.15);
+    const protocolConcOK=near(enteredConc,8,0.15);
     const tubingOK=drop===60;const desiredOK=desired>=2&&desired<=20;
-    const calculatedGtt=enteredConc>0?desired*drop/enteredConc:NaN;const mathOK=near(gtt,calculatedGtt,1.1);
-    const actualDoseOK=actualDose>=2&&actualDose<=20;
-    const valid=mixtureOK&&concStatementOK&&tubingOK&&desiredOK&&mathOK&&actualDoseOK;
-    const details={mg,drugVol,bag,enteredConc,drop,desired,gtt,actualConc:round(actualConc,2),actualDose:round(actualDose,2),mixtureOK,mathOK,summary:`${drugVol} mL into ${bag} mL, ${drop} gtt set, ${gtt} gtt/min → actual ${round(actualDose,2)} mcg/min`};
+    const studentCalculatedGtt=enteredConc>0?desired*drop/enteredConc:NaN;
+    const correctProtocolGtt=desiredOK?desired*60/8:NaN;
+    const mathOK=near(gtt,studentCalculatedGtt,1.1);
+    const protocolRateOK=desiredOK&&near(gtt,correctProtocolGtt,1.1);
+    const executionOK=mixtureOK&&statedAmountMatchesVial&&concentrationMathOK&&protocolConcOK&&tubingOK&&desiredOK&&mathOK&&protocolRateOK;
+    const valid=a.grade==='incorrect'?false:executionOK;
+    const details={mg,drugVol,bag,enteredConc,drop,desired,gtt,actualMg:round(actualMg,2),actualConc:round(actualConc,2),actualDose:round(actualDose,2),correctProtocolGtt:Number.isFinite(correctProtocolGtt)?Math.round(correctProtocolGtt):null,mixtureOK,statedAmountMatchesVial,concentrationMathOK,protocolConcOK,tubingOK,desiredOK,mathOK,protocolRateOK,executionOK,summary:`${drugVol} mL (${round(actualMg,2)} mg actual) into ${bag} mL → ${round(actualConc,2)} mcg/mL actual; ${drop} gtt set at ${gtt} gtt/min → actual ${round(actualDose,2)} mcg/min`};
     recordAction(wrap,s,a,b,{actionId:a.id,label:a.label,time:s.elapsed,valid,grade:a.grade,details});m.remove()};
 }
-
 function openMagnesiumInfusionModal(wrap,s,a,b){
   const f=FORMULARY.magnesium;const hint=s.mode==='FTO'?'<div class="fto-answer"><strong>Protocol mixture:</strong> 2 g in 250 mL NS at 250 mL/hr. CSFD text does not specify tubing; either 10 or 60 gtt/mL is accepted if the gravity-drip math is correct.</div>':'';
   const m=modalBase(a.label,`<div class="label-card"><div class="label-brand">AVAILABLE MEDICATION</div><strong>${f.name}</strong><div>${f.display}</div><div>Available NS bag: 250 mL</div><div>Available tubing: 10 / 60 gtt/mL</div></div>${hint}<form class="calc-form"><label>Magnesium to add (g)<input name="g" type="number" step="0.01"></label><label>Medication volume drawn (mL)<input name="drugVol" type="number" step="0.01"></label><label>Bag selected (mL)<input name="bag" type="number" value="250" step="1"></label><label>Rate ordered by protocol (mL/hr)<input name="rate" type="number" step="1"></label><label>Tubing selected (gtt/mL)<select name="drop"><option>10</option><option>60</option></select></label><label>Gravity drip rate (gtt/min)<input name="gtt" type="number" step="1"></label><button class="student-submit-btn">START INFUSION</button></form>`);
-  m.querySelector('form').onsubmit=ev=>{ev.preventDefault();const fd=new FormData(ev.currentTarget),g=Number(fd.get('g')),drugVol=Number(fd.get('drugVol')),bag=Number(fd.get('bag')),rate=Number(fd.get('rate')),drop=Number(fd.get('drop')),gtt=Number(fd.get('gtt'));const expectedGtt=rate*drop/60;const actualG=drugVol*f.conc;const valid=near(g,2,0.05)&&near(drugVol,4,0.05)&&bag===250&&near(rate,250,1)&&near(gtt,expectedGtt,1.1);recordAction(wrap,s,a,b,{actionId:a.id,label:a.label,time:s.elapsed,valid,grade:a.grade,details:{g,drugVol,bag,rate,drop,gtt,actualDose:round(actualG*rate/bag/60,4),summary:`${drugVol} mL in ${bag} mL at ${rate} mL/hr using ${drop} gtt set = ${gtt} gtt/min`}});m.remove()};
+  m.querySelector('form').onsubmit=ev=>{ev.preventDefault();const fd=new FormData(ev.currentTarget),g=Number(fd.get('g')),drugVol=Number(fd.get('drugVol')),bag=Number(fd.get('bag')),rate=Number(fd.get('rate')),drop=Number(fd.get('drop')),gtt=Number(fd.get('gtt'));const expectedGtt=rate*drop/60;const actualG=drugVol*f.conc;const executionOK=near(g,2,0.05)&&near(drugVol,4,0.05)&&bag===250&&near(rate,250,1)&&near(gtt,expectedGtt,1.1);const valid=a.grade==='incorrect'?false:executionOK;recordAction(wrap,s,a,b,{actionId:a.id,label:a.label,time:s.elapsed,valid,grade:a.grade,details:{g,drugVol,bag,rate,drop,gtt,actualDose:round(actualG*rate/bag/60,4),summary:`${drugVol} mL in ${bag} mL at ${rate} mL/hr using ${drop} gtt set = ${gtt} gtt/min`}});m.remove()};
 }
 
 function reassess(wrap,s){
@@ -732,47 +847,80 @@ function resolveEcgCfg(s){
 }
 function renderECG(box,s){
   const cfg=resolveEcgCfg(s);if(!cfg){box.innerHTML='<h3>12-Lead ECG</h3><p>No 12-lead tracing is configured for this scenario.</p>';return}
-  const attempt={time:s.elapsed,cfg,answers:null,score:null};s.ecgAttempts.push(attempt);const leads=['I','aVR','V1','V4','II','aVL','V2','V5','III','aVF','V3','V6'];
-  box.innerHTML=`<div class="ecg-head"><div><h3>12-Lead ECG #${s.ecgAttempts.length}</h3><div class="private-note">Synthetic training tracing generated from the current patient state. The layout follows the standard printed 3 × 4 lead arrangement.</div></div><span class="badge">${formatTime(s.elapsed)}</span></div><div class="ecg-scroll"><div class="ecg-grid">${leads.map(l=>`<div class="ecg-lead"><div class="lead-name">${l}</div>${makeLeadSVG(cfg,l,`${s.id}-${s.ecgAttempts.length}-${l}`)}</div>`).join('')}</div><div class="ecg-paper-footer"><span>25 mm/s • 10 mm/mV</span><span>Synthetic training ECG</span></div></div><form class="ecg-interpret"><h4>Interpret the tracing before moving on</h4><div class="ecg-form-grid"><label>Regularity<select name="regularity"><option>Regular</option><option>Irregular</option></select></label><label>Estimated rate (bpm)<input name="rate" type="number" step="1"></label><label>QRS<select name="qrs"><option>Narrow</option><option>Wide</option></select></label><label>ST-elevation territory<select name="territory"><option>None</option><option>Inferior</option><option>Septal</option><option>Anterior</option><option>Lateral</option></select></label></div><button type="submit" class="student-submit-btn">SAVE ECG INTERPRETATION</button></form>${s.mode==='FTO'?`<div class="fto-answer"><strong>FTO answer:</strong> ${esc(cfg.regularity)}, ~${cfg.rate} bpm, ${esc(cfg.qrs)} QRS, ST territory: ${esc(cfg.territory)}. Underlying rhythm: ${esc(cfg.rhythm)}. ${esc(cfg.note||'')}</div>`:''}`;
+  const attempt={time:s.elapsed,cfg,answers:null,score:null};s.ecgAttempts.push(attempt);const leads=['I','aVR','V1','V4','II','aVL','V2','V5','III','aVF','V3','V6'];const seedBase=`${s.id}-${s.ecgAttempts.length}`;
+  box.innerHTML=`<div class="ecg-head"><div><h3>12-Lead ECG #${s.ecgAttempts.length}</h3><div class="private-note">Synthetic training tracing generated from one underlying rhythm. The 3 × 4 display represents approximately 2.5 seconds per lead; the continuous Lead II strip below is a full 6 seconds.</div></div><span class="badge">${formatTime(s.elapsed)}</span></div><div class="ecg-scroll"><div class="ecg-grid">${leads.map(l=>`<div class="ecg-lead"><div class="lead-name">${l}</div>${makeLeadSVG(cfg,l,`${seedBase}-${l}`,2.5,false)}</div>`).join('')}</div><div class="ecg-rhythm-wrap"><div class="ecg-rhythm-label">II — 6 second rhythm strip</div>${makeLeadSVG(cfg,'II',`${seedBase}-rhythm-II`,6,true)}</div><div class="ecg-paper-footer"><span>25 mm/s • 10 mm/mV</span><span>Synthetic training ECG</span></div></div><form class="ecg-interpret"><h4>Interpret the tracing before moving on</h4><div class="ecg-form-grid"><label>Regularity<select name="regularity"><option>Regular</option><option>Irregular</option></select></label><label>Estimated rate (bpm)<input name="rate" type="number" step="1"></label><label>QRS<select name="qrs"><option>Narrow</option><option>Wide</option></select></label><label>ST-elevation territory<select name="territory"><option>None</option><option>Inferior</option><option>Septal</option><option>Anterior</option><option>Lateral</option></select></label></div><button type="submit" class="student-submit-btn">SAVE ECG INTERPRETATION</button></form>${s.mode==='FTO'?`<div class="fto-answer"><strong>FTO answer:</strong> ${esc(cfg.regularity)}, ~${cfg.rate} bpm, ${esc(cfg.qrs)} QRS, ST territory: ${esc(cfg.territory)}. Underlying rhythm: ${esc(cfg.rhythm)}. ${esc(cfg.note||'')}</div>`:''}`;
   box.querySelector('form').onsubmit=ev=>{ev.preventDefault();const fd=new FormData(ev.currentTarget),answers={regularity:fd.get('regularity'),rate:Number(fd.get('rate')),qrs:fd.get('qrs'),territory:fd.get('territory')};const parts={regularity:answers.regularity===cfg.regularity,rate:near(answers.rate,cfg.rate,10),qrs:answers.qrs===cfg.qrs,territory:answers.territory===cfg.territory};attempt.answers=answers;attempt.score=Object.values(parts).filter(Boolean).length;attempt.parts=parts;ev.currentTarget.querySelector('button').disabled=true;ev.currentTarget.querySelector('button').textContent='INTERPRETATION SAVED';s.log(`12-lead interpretation saved: ${answers.regularity}, ${answers.rate} bpm, ${answers.qrs}, ST ${answers.territory}.`)};
 }
 
 function hashSeed(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
 function seeded(seed){let x=hashSeed(seed)||1;return()=>{x^=x<<13;x^=x>>>17;x^=x<<5;return (x>>>0)/4294967296}}
-function makeLeadSVG(cfg,lead,seed){
-  const w=260,h=90,base=45,rand=seeded(seed),st=(cfg.st&&cfg.st[lead])||0;const path=buildWavePath(cfg,lead,w,h,base,st,rand);
-  return `<svg class="ecg-paper" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-label="Synthetic ${lead} ECG lead"><defs><pattern id="small-${esc(seed)}" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M 5 0 L 0 0 0 5" fill="none" stroke="#f2c7c7" stroke-width="0.35"/></pattern><pattern id="big-${esc(seed)}" width="25" height="25" patternUnits="userSpaceOnUse"><rect width="25" height="25" fill="url(#small-${esc(seed)})"/><path d="M 25 0 L 0 0 0 25" fill="none" stroke="#df9696" stroke-width="0.7"/></pattern></defs><rect width="100%" height="100%" fill="#fffafa"/><rect width="100%" height="100%" fill="url(#big-${esc(seed)})"/><path d="${path}" fill="none" stroke="#161616" stroke-width="1.25" vector-effect="non-scaling-stroke"/></svg>`;
+const LEAD_SHAPES={
+  I:{p:.8,q:.18,r:1.0,s:.28,t:.75},II:{p:1.0,q:.18,r:1.22,s:.30,t:.9},III:{p:.65,q:.2,r:.8,s:.36,t:.58},aVR:{p:-.65,q:-.12,r:-.88,s:-.22,t:-.62},aVL:{p:.48,q:.12,r:.58,s:.22,t:.48},aVF:{p:.72,q:.18,r:.96,s:.30,t:.7},
+  V1:{p:.35,q:.08,r:.28,s:1.18,t:.20},V2:{p:.45,q:.08,r:.48,s:.95,t:.12},V3:{p:.55,q:.1,r:.78,s:.65,t:.48},V4:{p:.62,q:.12,r:1.18,s:.32,t:.82},V5:{p:.58,q:.12,r:1.28,s:.22,t:.82},V6:{p:.52,q:.12,r:1.05,s:.18,t:.68}
+};
+function gauss(x,mu,sigma){const z=(x-mu)/sigma;return Math.exp(-.5*z*z)}
+function safeId(seed){return String(seed).replace(/[^A-Za-z0-9_-]/g,'_')}
+function makeLeadSVG(cfg,lead,seed,duration=2.5,rhythmStrip=false){
+  const w=rhythmStrip?900:260,h=rhythmStrip?118:108,base=rhythmStrip?59:54,rand=seeded(seed),st=(cfg.st&&cfg.st[lead])||0;const path=buildWavePath(cfg,lead,w,h,base,st,rand,duration);const sid=safeId(seed);
+  return `<svg class="${rhythmStrip?'ecg-rhythm-paper':'ecg-paper'}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-label="Synthetic ${lead} ECG lead"><defs><pattern id="small-${sid}" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M 5 0 L 0 0 0 5" fill="none" stroke="#efbaba" stroke-width="0.36"/></pattern><pattern id="big-${sid}" width="25" height="25" patternUnits="userSpaceOnUse"><rect width="25" height="25" fill="url(#small-${sid})"/><path d="M 25 0 L 0 0 0 25" fill="none" stroke="#df7777" stroke-width="0.72"/></pattern></defs><rect width="100%" height="100%" fill="#fffafa"/><rect width="100%" height="100%" fill="url(#big-${sid})"/><path d="${path}" fill="none" stroke="#111" stroke-width="1.15" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
 }
-function buildWavePath(cfg,lead,w,h,base,st,rand){
-  if(cfg.rhythm==='Torsades de pointes'){
-    let d=`M 0 ${base}`;for(let x=1;x<=w;x++){const amp=8+18*(0.5+0.5*Math.sin(x/42));const y=base-Math.sin(x/6)*amp;d+=` L ${x} ${y.toFixed(2)}`;}return d;
+function makeBeatTimes(cfg,duration,rand){
+  const beats=[];const rhythm=cfg.rhythm;
+  if(rhythm==='Atrial fibrillation'){
+    let t=-.25;while(t<duration+.35){const baseRR=60/cfg.rate;const rr=baseRR*(.62+rand()*.78);t+=rr;if(t>-0.2)beats.push(t)}return beats;
   }
-  const secWidth=w/2.5;let intervals=[];
-  if(cfg.rhythm==='Third-degree AV block'||cfg.rhythm==='Second-degree AV block Type II'){
-    const vRate=cfg.rate;const interval=secWidth*60/vRate;for(let x=15;x<w;x+=interval)intervals.push(x);
-  }else{
-    let x=10;while(x<w-15){let rr=secWidth*60/cfg.rate;if(cfg.rhythm==='Atrial fibrillation')rr*=0.72+rand()*0.6;x+=rr;intervals.push(x)}
+  if(rhythm==='Second-degree AV block Type II'){
+    const atrialRate=Math.max(66,Math.min(92,cfg.rate*2.4)),pRR=60/atrialRate;let p=-.3,i=0;while(p<duration+.4){p+=pRR;i++;const pattern=(i%5===1||i%5===2);if(pattern)beats.push(p+.17)}return beats;
   }
-  const qrsWide=cfg.qrs==='Wide';let pts=[[0,base]];
-  intervals.forEach((x,i)=>{
-    const amp=(lead==='aVR'?-1:1)*(12+(rand()-.5)*3);
-    if(cfg.rhythm==='Sinus rhythm'){
-      pts.push([x-20,base],[x-16,base-3],[x-12,base],[x-5,base]);
-    }else if(cfg.rhythm==='Atrial fibrillation'){
-      for(let j=-22;j<-5;j+=4)pts.push([x+j,base+(rand()-.5)*3]);
-    }else if(cfg.rhythm==='SVT'){
-      pts.push([x-8,base]);
-    }else if(cfg.rhythm==='Paced rhythm'){
-      pts.push([x-7,base],[x-6,base-18],[x-5,base]);
+  const rr=60/cfg.rate;let t=-rr;while(t<duration+.5){t+=rr;beats.push(t)}return beats;
+}
+function buildWavePath(cfg,lead,w,h,base,st,rand,duration=2.5){
+  const rhythm=cfg.rhythm,shape=LEAD_SHAPES[lead]||LEAD_SHAPES.II,beats=makeBeatTimes(cfg,duration,rand),pxPerMv=32;const samples=Math.max(260,Math.round(w*1.25));const atrialRate=rhythm==='Third-degree AV block'?Math.max(72,Math.min(92,cfg.rate*2.5)):Math.max(68,Math.min(92,cfg.rate*2.4));
+  const pTimes=[];if(rhythm==='Third-degree AV block'||rhythm==='Second-degree AV block Type II'){let t=-.4;const rr=60/atrialRate;while(t<duration+.4){t+=rr;pTimes.push(t)}}
+  let d='';
+  for(let i=0;i<=samples;i++){
+    const t=i/samples*duration,x=i/samples*w;let mv=.018*Math.sin(2*Math.PI*t/4.8)+.008*Math.sin(2*Math.PI*t*7.2+hashSeed(lead)%7);
+    if(rhythm==='Atrial fibrillation')mv+=.025*Math.sin(2*Math.PI*t*6.3)+.018*Math.sin(2*Math.PI*t*8.1+1.4);
+    if(rhythm==='Torsades de pointes'){
+      const env=.65+.48*Math.sin(2*Math.PI*t/2.0);mv+=env*(.75*Math.sin(2*Math.PI*t*(cfg.rate/60))+.22*Math.sin(2*Math.PI*t*(cfg.rate/30)+.7));
+    }else{
+      for(const bt of beats){const dt=t-bt;
+        if(rhythm==='Ventricular tachycardia'){
+          mv+=shape.r*1.15*gauss(dt,-.025,.032)-shape.s*.85*gauss(dt,.035,.045)-shape.r*.42*gauss(dt,.105,.055)-shape.t*.45*gauss(dt,.30,.10);
+        }else{
+          const wide=cfg.qrs==='Wide';
+          if(rhythm==='Sinus rhythm')mv+=shape.p*.15*gauss(dt,-.17,.035);
+          else if(rhythm==='Paced rhythm')mv+=1.25*gauss(dt,-.018,.0025);
+          else if(rhythm==='SVT')mv+=-shape.p*.05*gauss(dt,.075,.018);
+          if(wide){mv+=-shape.q*.25*gauss(dt,-.035,.018)+shape.r*.9*gauss(dt,.01,.035)-shape.s*.72*gauss(dt,.075,.040);}
+          else{mv+=-shape.q*.18*gauss(dt,-.022,.008)+shape.r*1.0*gauss(dt,0,.010)-shape.s*.72*gauss(dt,.030,.012);}
+          const stStart=wide?.105:.055,stEnd=wide?.23:.18;if(dt>stStart&&dt<stEnd)mv+=st*.14;
+          const tPol=(lead==='V1'?-1:1);mv+=shape.t*.28*tPol*gauss(dt,wide?.36:.30,wide?.095:.075);
+        }
+      }
+      if(rhythm==='Third-degree AV block'||rhythm==='Second-degree AV block Type II')for(const pt of pTimes)mv+=shape.p*.15*gauss(t-pt,0,.035);
     }
-    if(qrsWide){pts.push([x-4,base],[x,base-amp*1.4],[x+7,base+amp*.9],[x+18,base-amp*.5],[x+26,base]);}
-    else{pts.push([x-3,base],[x,base-amp*.35],[x+2,base+amp*1.4],[x+5,base-amp*.55],[x+8,base]);}
-    const stY=base-st*3.5*(lead==='aVR'?-1:1);pts.push([x+(qrsWide?27:9),stY],[x+(qrsWide?38:20),stY],[x+(qrsWide?48:30),base-amp*.25],[x+(qrsWide?58:42),base]);
-  });
-  if(cfg.rhythm==='Third-degree AV block'||cfg.rhythm==='Second-degree AV block Type II'){
-    const pInt=secWidth*60/82;for(let x=8;x<w;x+=pInt){pts.push([x-3,base],[x,base-4],[x+3,base]);}
+    const y=clamp(base-mv*pxPerMv,5,h-5);d+=(i===0?`M ${x.toFixed(2)} ${y.toFixed(2)}`:` L ${x.toFixed(2)} ${y.toFixed(2)}`);
   }
-  pts.sort((a,b)=>a[0]-b[0]);let d=`M ${pts[0][0]} ${pts[0][1]}`;for(let i=1;i<pts.length;i++)d+=` L ${clamp(pts[i][0],0,w).toFixed(1)} ${clamp(pts[i][1],5,h-5).toFixed(1)}`;return d;
+  return d;
+}
+function infusionAARCells(s,a,r){
+  if(!r)return {entered:'No dose / calculation entered',correct:expectedActionText(s,a)};
+  const d=r.details||{};
+  if(a.infusionType==='norepi'){
+    const desiredText=Number.isFinite(d.desired)?`${fmt(d.desired)} mcg/min`:'not entered';
+    const correctRate=Number.isFinite(d.correctProtocolGtt)?`${d.correctProtocolGtt} gtt/min for the selected ${fmt(d.desired)} mcg/min target`:'Choose a target dose within 2–20 mcg/min, then calculate the rate using 8 mcg/mL and 60 gtt/mL tubing.';
+    return {
+      entered:`<div class="calc-breakdown"><div>Drug entered: ${fmt(d.mg)} mg; volume drawn: ${fmt(d.drugVol)} mL → <span class="calc-emphasis">${fmt(d.actualMg)} mg actually added</span></div><div>Bag: ${fmt(d.bag)} mL NS</div><div>Concentration entered: ${fmt(d.enteredConc)} mcg/mL; <span class="calc-emphasis">actual mixture ${fmt(d.actualConc)} mcg/mL</span></div><div>Tubing: ${fmt(d.drop)} gtt/mL</div><div>Desired dose: ${desiredText}</div><div>Rate run: ${fmt(d.gtt)} gtt/min</div><div class="calc-emphasis">Actual delivered dose: ${fmt(d.actualDose)} mcg/min</div></div>`,
+      correct:`<div class="calc-breakdown"><div>Drug: <span class="calc-emphasis">2 mg = 2 mL</span></div><div>Bag: <span class="calc-emphasis">250 mL NS</span></div><div>Final concentration: <span class="calc-emphasis">8 mcg/mL</span></div><div>Tubing: <span class="calc-emphasis">60 gtt/mL</span></div><div>Dose range: <span class="calc-emphasis">2–20 mcg/min, titrated</span>${d.desiredOK?`; selected target ${desiredText} is within range`:''}</div><div>Correct rate: <span class="calc-emphasis">${correctRate}</span></div></div>`
+    };
+  }
+  if(a.infusionType==='magnesiumTorsades')return {entered:`<div class="calc-breakdown"><div>${esc(d.summary||'Infusion entered')}</div><div>Calculated delivered magnesium: ${fmt(d.actualDose)} g/min</div></div>`,correct:'Magnesium 2 g (4 mL) in 250 mL NS at 250 mL/hr; gravity gtt/min depends on selected tubing.'};
+  return {entered:esc(d.summary||'Calculation entered'),correct:esc(expectedActionText(s,a))};
+}
+function calcReviewCells(s,a,r){
+  if(a.kind==='infusion')return infusionAARCells(s,a,r);
+  return {entered:esc(r?.details?.summary||'No dose / calculation entered'),correct:esc(a.grade==='incorrect'?'Not indicated for this scenario.':expectedActionText(s,a))};
 }
 
 function renderAAR(wrap,s){
@@ -786,7 +934,7 @@ function renderAAR(wrap,s){
   const assessmentPct=criticalAssess.length?assessHits/criticalAssess.length:1;const actionPct=required.length?actionHits/required.length:1;const medPct=medScoreActions.length?medGood/medScoreActions.length:1;const procPct=procScoreActions.length?procGood/procScoreActions.length:1;const ecgPct=ecgMax?ecgPoints/ecgMax:(ecgNeeded?0:1);
   let overall=Math.round(100*(assessmentPct*.2+actionPct*.35+medPct*.2+procPct*.1+ecgPct*.15));overall-=harmful.length*10;overall-=incorrect.length*4;if(!serialOK)overall-=5;overall=clamp(overall,0,100);
   const missingAssess=criticalAssess.filter(a=>!s.assessmentDone.has(a.id)).map(a=>a.label);const missingActions=required.filter(a=>!s.hasValid(a.id)).map(a=>expectedActionText(s,a));
-  const reviewActions=actions.filter(a=>['med','fluid','infusion','decoyMed'].includes(a.kind)&&(actionRequired(s,a)||s.latestAttempt(a.id)));const calcRows=reviewActions.map(a=>{const r=s.latestAttempt(a.id);const result=!r?'Missed':r.valid?'Correct':a.grade==='incorrect'?'Incorrect medication choice':'Needs review';const entered=r?.details?.summary||'No dose / calculation entered';const correct=a.grade==='incorrect'?'Not indicated for this scenario.':expectedActionText(s,a);return `<tr><td>${esc(a.label)}</td><td class="${r?.valid?'aar-correct':'aar-wrong'}">${esc(result)}</td><td>${esc(entered)}</td><td>${esc(correct)}</td></tr>`}).join('');
+  const reviewActions=actions.filter(a=>['med','fluid','infusion','decoyMed'].includes(a.kind)&&(actionRequired(s,a)||s.latestAttempt(a.id)));const calcRows=reviewActions.map(a=>{const r=s.latestAttempt(a.id);const result=!r?'Missed':r.valid?'Correct':a.grade==='incorrect'?'Incorrect choice':'Needs review';const cells=calcReviewCells(s,a,r);return `<tr><td>${esc(a.label)}</td><td class="${r?.valid?'aar-correct':'aar-wrong'}">${esc(result)}</td><td>${cells.entered}</td><td>${cells.correct}</td></tr>`}).join('');
   const ecgRows=ecgDone.map((x,i)=>`<tr><td>#${i+1} at ${formatTime(x.time)}</td><td>${x.score}/4</td><td>${esc(`${x.answers.regularity}, ${x.answers.rate} bpm, ${x.answers.qrs}, ST ${x.answers.territory}`)}</td><td>${esc(`${x.cfg.regularity}, ~${x.cfg.rate} bpm, ${x.cfg.qrs}, ST ${x.cfg.territory}; underlying rhythm: ${x.cfg.rhythm}`)}</td></tr>`).join('');
   const out=wrap.querySelector('.aar-output');out.innerHTML=`<div class="card aar-card"><div class="aar-score"><div class="aar-number">${overall}%</div><div><h3>After-Action Review</h3><div class="diagnosis-title">${esc(s.template.diagnosis)}</div><div class="private-note">Provider level: ${esc(s.provider)} • Scenario time: ${formatTime(s.elapsed)}</div></div></div><div class="aar-grid"><div><strong>Assessment</strong><span>${Math.round(assessmentPct*100)}%</span></div><div><strong>Protocol Actions</strong><span>${Math.round(actionPct*100)}%</span></div><div><strong>Medication / Math</strong><span>${Math.round(medPct*100)}%</span></div><div><strong>Procedures</strong><span>${Math.round(procPct*100)}%</span></div><div><strong>ECG Interpretation</strong><span>${Math.round(ecgPct*100)}%</span></div></div>${missingAssess.length?`<div class="aar-section"><h4>Missed Critical Assessments</h4><ul>${missingAssess.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''}${missingActions.length?`<div class="aar-section"><h4>Missing / Incorrect Critical Actions</h4><ul>${missingActions.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''}${incorrect.length?`<div class="aar-section"><h4>Incorrect / Unnecessary Actions</h4><ul>${incorrect.map(x=>`<li>${esc(x.label)}${x.details?.summary?` — ${esc(x.details.summary)}`:''}</li>`).join('')}</ul></div>`:''}${harmful.length?`<div class="aar-section"><h4>Potentially Harmful Actions</h4><ul>${harmful.map(x=>`<li>${esc(x.label)}</li>`).join('')}</ul></div>`:''}${calcRows?`<div class="aar-section"><h4>Medication / Calculation Review</h4><div class="table-wrap"><table><thead><tr><th>Action</th><th>Result</th><th>What you entered / delivered</th><th>Correct answer</th></tr></thead><tbody>${calcRows}</tbody></table></div></div>`:''}${ecgRows?`<div class="aar-section"><h4>ECG Review</h4><div class="table-wrap"><table><thead><tr><th>Tracing</th><th>Score</th><th>Your interpretation</th><th>Correct interpretation</th></tr></thead><tbody>${ecgRows}</tbody></table></div>${!serialOK?`<div class="deadline-banner">Serial ECG requirement not met. This scenario expected at least ${serialNeed} tracing(s).</div>`:''}</div>`:''}<div class="aar-section"><h4>CSFD Protocol References Used in This Scenario</h4><p>${esc(s.template.protocolRefs.join(' • '))}</p></div></div>`;out.scrollIntoView({behavior:'smooth',block:'start'});
 }
