@@ -84,14 +84,14 @@ const fmt=n=>Number.isInteger(n)?String(n):String(round(n,2));
 const esc=s=>String(s??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 const FORMULARY={
-  aspirin:{name:'Aspirin',display:'81 mg tablets',tabletStrength:81,doseUnit:'mg'},
+  aspirin:{name:'Aspirin',display:'81 mg tablets',tabletStrength:81,unitLabel:'tablets',doseUnit:'mg'},
   apap:{name:'Acetaminophen',display:'Tablet / oral suspension / IV form — use the label on the medication in hand',doseUnit:'mg'},
   epiIM:{name:'Epinephrine 1:1,000',display:'1 mg/mL — 1 mL vial',conc:1,concUnit:'mg',doseUnit:'mg'},
   albuterol:{name:'Albuterol',display:'2.5 mg / 3 mL unit dose',conc:2.5/3,concUnit:'mg',doseUnit:'mg'},
   duoneb:{name:'Ipratropium / Albuterol (DuoNeb)',display:'0.5 mg ipratropium / 3 mg albuterol — 3 mL unit dose',fixedVolume:3,doseUnit:'unit dose'},
   benadryl:{name:'Diphenhydramine',display:'50 mg / 1 mL',conc:50,concUnit:'mg',doseUnit:'mg'},
   solumedrol:{name:'Methylprednisolone (Solu-Medrol)',display:'125 mg / 2 mL Act-O-Vial',conc:62.5,concUnit:'mg',doseUnit:'mg'},
-  nitro:{name:'Nitroglycerin',display:'0.4 mg SL tablet / metered spray',unitStrength:0.4,doseUnit:'mg'},
+  nitro:{name:'Nitroglycerin',display:'0.4 mg SL tablet / metered spray',unitStrength:0.4,unitLabel:'tablets / sprays',doseUnit:'mg'},
   diltiazem:{name:'Diltiazem (Cardizem)',display:'25 mg / 5 mL (5 mg/mL)',conc:5,concUnit:'mg',doseUnit:'mg'},
   adenosine:{name:'Adenosine',display:'12 mg / 4 mL (3 mg/mL)',conc:3,concUnit:'mg',doseUnit:'mg'},
   magnesium:{name:'Magnesium Sulfate',display:'5 g / 10 mL (0.5 g/mL)',conc:0.5,concUnit:'g',doseUnit:'g'},
@@ -234,6 +234,7 @@ const TOOLBOX_BANK=[
 
   // Drips / infusions.
   decoyInfusion('tool-norepi-infusion','Build Norepinephrine Infusion','norepi','Paramedic'),
+  decoyInfusion('tool-amio-maint-infusion','Build Amiodarone Maintenance Infusion','amiodaroneMaintenance','Paramedic'),
   decoyInfusion('tool-mag-infusion','Build Magnesium Infusion','magnesiumTorsades','Paramedic'),
 
   // Cardiac / electrical and procedures.
@@ -436,7 +437,7 @@ const SCENARIOS=[
       simple('iv','Establish IV Access','Circulation','critical','AEMT'),
       med('amio','Amiodarone','Medications','amiodarone','critical','Paramedic',s=>medExpected({dose:150,unit:'mg',route:['IV'],adminTime:10})),
       med('magnesium','Magnesium Sulfate','Medications','magnesium','beneficial','Paramedic',s=>medExpected({dose:2,unit:'g',route:['IV'],adminTime:2})),
-      simple('amio-maint','Start Amiodarone Maintenance Infusion','Drips / Infusions','critical','Paramedic',{note:'The supplied CSFD text specifies 1 mg/min but does not provide a bag-mixing formula here; this build does not invent one.'}),
+      infusion('amio-maint','Build Amiodarone Maintenance Infusion','Drips / Infusions','amiodaroneMaintenance','critical','Paramedic',{note:'Deliver amiodarone at 1 mg/min. The trainer grades the actual delivered dose rather than requiring one memorized bag recipe.'}),
       simple('transport','Transport / Continuous Monitoring','Transport / Notification','critical','EMT-B')
     ],
     onAction:(s,r)=>{if(r.valid&&r.actionId==='amio')s.ecgIndex=1},
@@ -613,6 +614,7 @@ function expectedActionText(s,a){
   if(a.kind==='fluid')return `${a.label}: ${fmt(a.expected(s))} mL`;
   if(a.kind==='infusion'){
     if(a.infusionType==='norepi')return 'Norepinephrine: deliver 2-20 mcg/min titrated. Any correctly calculated mixture and available tubing setup is accepted when the actual delivered dose matches the selected dose.';
+    if(a.infusionType==='amiodaroneMaintenance')return 'Amiodarone maintenance infusion: deliver 1 mg/min. Any correctly calculated concentration and 10 or 60 gtt/mL tubing setup is accepted when the physical setup actually delivers 1 mg/min.';
     if(a.infusionType==='magnesiumTorsades')return 'Magnesium follow-up infusion: deliver the protocol-equivalent magnesium dose/rate. Alternative correctly calculated concentrations and tubing setups may be used if the actual delivered dose is equivalent.';
   }
   if(a.kind==='procedure'){
@@ -752,27 +754,30 @@ function modalBase(title,body){
 
 function openMedicationModal(wrap,s,a,b){
   const f=FORMULARY[a.medKey];const e=getExpected(s,a);const display=a.displayOverride||f.display;
-  const countField=(f.tabletStrength||f.unitStrength||e.count)?`<label>Number of tablets / sprays / unit doses<input name="count" type="number" step="0.01" min="0"></label>`:'';
+  const hasDiscreteUnits=!!(f.tabletStrength||f.unitStrength||e.count);
+  const unitLabel=f.unitLabel||'tablets / sprays / unit doses';
+  const countField=hasDiscreteUnits?`<label>Number of ${esc(unitLabel)}<input name="count" type="number" step="0.01" min="0" required></label>`:'';
   const flushField=e.flush?`<label>Flush volume (mL)<input name="flush" type="number" step="0.1" min="0"></label>`:'';
-  const timeField=e.adminTime?`<label>Administration time (minutes)<input name="adminTime" type="number" step="0.1" min="0"></label>`:'';
-  const routes=['PO','SL','IM','IV','IO','IN','NEB','Rapid IV','IV/IO'].map(x=>`<option>${x}</option>`).join('');
+  const timeField=e.adminTime?`<label>Administration time (minutes)<input name="adminTime" type="number" step="0.1" min="0" required placeholder="minutes"></label>`:'';
+  const routeChoices=['PO','SL','IM','IV','IO','IN','NEB','Rapid IV','IV/IO'];
+  const routes=`<option value="" selected disabled>Select route...</option>`+routeChoices.map(x=>`<option>${x}</option>`).join('');
   const hint=s.mode==='FTO'?`<div class="fto-answer"><strong>Expected:</strong> ${esc(expectedActionText(s,a))}</div>`:'';
-  const m=modalBase(a.label,`<div class="label-card"><div class="label-brand">AVAILABLE MEDICATION</div><strong>${esc(f.name)}</strong><div>${esc(display)}</div><div>Patient weight: <strong>${s.patient.weight} kg</strong></div></div>${hint}<form class="calc-form"><label>Dose to administer (${esc(e.unit)})<input name="dose" type="number" step="0.001" min="0" required></label><label>Volume to draw (mL)<input name="volume" type="number" step="0.001" min="0"></label>${countField}<label>Route<select name="route">${routes}</select></label>${timeField}${flushField}<button class="student-submit-btn" type="submit">ADMINISTER</button></form>`);
+  const m=modalBase(a.label,`<div class="label-card"><div class="label-brand">AVAILABLE MEDICATION</div><strong>${esc(f.name)}</strong><div>${esc(display)}</div><div>Patient weight: <strong>${s.patient.weight} kg</strong></div></div>${hint}<form class="calc-form"><label>Dose to administer (${esc(e.unit)})<input name="dose" type="number" step="0.001" min="0" required></label><label>Volume to draw (mL)<input name="volume" type="number" step="0.001" min="0"></label>${countField}<label>Route<select name="route" required>${routes}</select></label>${timeField}${flushField}<button class="student-submit-btn" type="submit">ADMINISTER</button></form>`);
   m.querySelector('form').addEventListener('submit',ev=>{
-    ev.preventDefault();const fd=new FormData(ev.currentTarget);const dose=Number(fd.get('dose')),vol=Number(fd.get('volume')),count=Number(fd.get('count')),route=fd.get('route'),time=Number(fd.get('adminTime')),flush=Number(fd.get('flush'));
+    ev.preventDefault();const fd=new FormData(ev.currentTarget);const dose=Number(fd.get('dose')),vol=Number(fd.get('volume')),countRaw=fd.get('count'),count=(countRaw==null||String(countRaw).trim()==='')?NaN:Number(countRaw),route=fd.get('route'),timeRaw=fd.get('adminTime'),time=(timeRaw==null||String(timeRaw).trim()==='')?NaN:Number(timeRaw),flush=Number(fd.get('flush'));
     let doseOK=e.range?dose>=e.range[0]-0.001&&dose<=e.range[1]+0.001:near(dose,e.dose,Math.max(Math.abs(e.dose||0)*0.02,0.01));
     let expectedVol=null,volOK=true;
     if(f.conc&&f.concUnit===e.unit){expectedVol=dose/f.conc;volOK=near(vol,expectedVol,Math.max(expectedVol*0.03,0.02));}
     else if(f.fixedVolume){expectedVol=f.fixedVolume;volOK=near(vol,expectedVol,0.05)}
     else if(f.tabletStrength){expectedVol=null;volOK=true}
     const routeOK=e.route.includes(route)||e.route.includes(route.replace('Rapid ','').replace('/IO',''));
-    const countExpected=e.count??(f.tabletStrength?dose/f.tabletStrength:f.unitStrength?dose/f.unitStrength:null);
-    const countOK=countExpected==null||near(count,countExpected,0.05);
-    let timeOK=true;if(Array.isArray(e.adminTime))timeOK=time>=e.adminTime[0]&&time<=e.adminTime[1];else if(e.adminTime)timeOK=near(time,e.adminTime,0.15);
+    const countExpected=e.count??(f.tabletStrength?e.dose/f.tabletStrength:f.unitStrength?e.dose/f.unitStrength:null);
+    const countOK=countExpected==null||(Number.isFinite(count)&&near(count,countExpected,0.05));
+    let timeOK=true;if(Array.isArray(e.adminTime))timeOK=Number.isFinite(time)&&time>=e.adminTime[0]&&time<=e.adminTime[1];else if(e.adminTime)timeOK=Number.isFinite(time)&&near(time,e.adminTime,0.5);
     const flushOK=e.flush==null||near(flush,e.flush,0.5);
     const valid=doseOK&&volOK&&routeOK&&countOK&&timeOK&&flushOK;
     const actualDose=f.conc&&Number.isFinite(vol)&&vol>0?vol*f.conc:(f.tabletStrength&&count?count*f.tabletStrength:(f.unitStrength&&count?count*f.unitStrength:dose));
-    const details={dose,volume:vol,route,count,adminTime:time,flush,actualDose,expectedVolume:expectedVol,summary:`entered ${fmt(dose)} ${e.unit}${Number.isFinite(vol)&&vol>0?`, ${fmt(vol)} mL`:''}, ${route}`};
+    const details={dose,volume:vol,route,count,adminTime:time,flush,actualDose,expectedVolume:expectedVol,doseOK,volOK,routeOK,countOK,timeOK,flushOK,summary:`entered ${fmt(dose)} ${e.unit}${Number.isFinite(count)?`, ${fmt(count)} ${unitLabel}`:''}${Number.isFinite(vol)&&vol>0?`, ${fmt(vol)} mL`:''}, ${route}${Number.isFinite(time)?`, over ${fmt(time)} min`:''}`};
     recordAction(wrap,s,a,b,{actionId:a.id,label:a.label,time:s.elapsed,valid,grade:a.grade,details});
     m.remove();
   });
@@ -780,8 +785,8 @@ function openMedicationModal(wrap,s,a,b){
 
 function openDecoyMedicationModal(wrap,s,a,b){
   const f=FORMULARY[a.medKey];if(!f){recordAction(wrap,s,a,b,{actionId:a.id,label:a.label,time:s.elapsed,valid:false,grade:'incorrect',details:{summary:'Medication selected'}});return}
-  const unit=f.doseUnit||f.concUnit||'mg';const countField=(f.tabletStrength||f.unitStrength)?`<label>Number of tablets / sprays / unit doses<input name="count" type="number" step="0.01" min="0"></label>`:'';const routes=['PO','SL','IM','IV','IO','IN','NEB','Rapid IV','IV/IO'].map(x=>`<option>${x}</option>`).join('');
-  const m=modalBase(a.label,`<div class="label-card"><div class="label-brand">AVAILABLE MEDICATION</div><strong>${esc(f.name)}</strong><div>${esc(f.display)}</div><div>Patient weight: <strong>${s.patient.weight} kg</strong></div></div><form class="calc-form"><label>Dose to administer (${esc(unit)})<input name="dose" type="number" step="0.001" min="0" required></label><label>Volume to draw (mL)<input name="volume" type="number" step="0.001" min="0"></label>${countField}<label>Route<select name="route">${routes}</select></label><button class="student-submit-btn" type="submit">ADMINISTER</button></form>`);
+  const unit=f.doseUnit||f.concUnit||'mg';const countField=(f.tabletStrength||f.unitStrength)?`<label>Number of ${esc(f.unitLabel||'tablets / sprays / unit doses')}<input name="count" type="number" step="0.01" min="0"></label>`:'';const routes=`<option value="" selected disabled>Select route...</option>`+['PO','SL','IM','IV','IO','IN','NEB','Rapid IV','IV/IO'].map(x=>`<option>${x}</option>`).join('');
+  const m=modalBase(a.label,`<div class="label-card"><div class="label-brand">AVAILABLE MEDICATION</div><strong>${esc(f.name)}</strong><div>${esc(f.display)}</div><div>Patient weight: <strong>${s.patient.weight} kg</strong></div></div><form class="calc-form"><label>Dose to administer (${esc(unit)})<input name="dose" type="number" step="0.001" min="0" required></label><label>Volume to draw (mL)<input name="volume" type="number" step="0.001" min="0"></label>${countField}<label>Route<select name="route" required>${routes}</select></label><button class="student-submit-btn" type="submit">ADMINISTER</button></form>`);
   m.querySelector('form').addEventListener('submit',ev=>{ev.preventDefault();const fd=new FormData(ev.currentTarget);const dose=Number(fd.get('dose')),vol=Number(fd.get('volume')),count=Number(fd.get('count')),route=fd.get('route');let actualDose=dose;if(f.conc&&Number.isFinite(vol)&&vol>0)actualDose=vol*f.conc;else if(f.tabletStrength&&count)actualDose=count*f.tabletStrength;else if(f.unitStrength&&count)actualDose=count*f.unitStrength;const summary=`entered ${fmt(dose)} ${unit}${Number.isFinite(vol)&&vol>0?`, ${fmt(vol)} mL`:''}, ${route}${Number.isFinite(actualDose)?` → actual ${fmt(actualDose)} ${f.concUnit||unit}`:''}`;recordAction(wrap,s,a,b,{actionId:a.id,label:a.label,time:s.elapsed,valid:false,grade:'incorrect',details:{dose,volume:vol,count,route,actualDose,summary}});m.remove()});
 }
 
@@ -812,6 +817,7 @@ function openProcedureModal(wrap,s,a,b){
 
 function openInfusionModal(wrap,s,a,b){
   if(a.infusionType==='norepi')return openNorepiModal(wrap,s,a,b);
+  if(a.infusionType==='amiodaroneMaintenance')return openAmiodaroneMaintenanceModal(wrap,s,a,b);
   if(a.infusionType==='magnesiumTorsades')return openMagnesiumInfusionModal(wrap,s,a,b);
 }
 
@@ -831,6 +837,23 @@ function openNorepiModal(wrap,s,a,b){
     const executionOK=statedAmountMatchesVial&&concentrationMathOK&&tubingOK&&desiredOK&&mathOK&&deliveredDoseOK;
     const valid=a.grade==='incorrect'?false:executionOK;
     const details={mg,drugVol,bag,enteredConc,drop,desired,gtt,actualMg:round(actualMg,2),actualConc:round(actualConc,2),actualDose:round(actualDose,2),statedAmountMatchesVial,concentrationMathOK,tubingOK,desiredOK,mathOK,deliveredDoseOK,executionOK,expectedGtt:Number.isFinite(studentCalculatedGtt)?round(studentCalculatedGtt,1):null,summary:`${drugVol} mL (${round(actualMg,2)} mg actual) into ${bag} mL → ${round(actualConc,2)} mcg/mL actual; ${drop} gtt set at ${gtt} gtt/min → actual ${round(actualDose,2)} mcg/min`};
+    recordAction(wrap,s,a,b,{actionId:a.id,label:a.label,time:s.elapsed,valid,grade:a.grade,details});m.remove()};
+}
+function openAmiodaroneMaintenanceModal(wrap,s,a,b){
+  const f=FORMULARY.amiodarone;const hint=s.mode==='FTO'?'<div class="fto-answer"><strong>Target:</strong> Amiodarone 1 mg/min maintenance infusion. No single bag recipe is required by this trainer; grade the concentration math, gravity-rate math, and actual delivered dose.</div>':'';
+  const m=modalBase(a.label,`<div class="label-card"><div class="label-brand">AVAILABLE MEDICATION</div><strong>${f.name}</strong><div>${f.display}</div><div>Use a compatible carrier bag volume available to your crew.</div><div>Available tubing in trainer: 10 / 60 gtt/mL</div></div>${hint}<form class="calc-form infusion-form"><div class="infusion-step">STEP 1 — BUILD THE BAG</div><label>Amount of amiodarone you intend to add (mg)<input name="mg" type="number" step="0.1" min="0" required></label><label>Volume drawn from vial(s) (mL)<input name="drugVol" type="number" step="0.01" min="0" required></label><label>Carrier bag volume (mL)<input name="bag" type="number" step="1" min="1" required></label><div class="infusion-step">STEP 2 — DETERMINE CONCENTRATION</div><label>Final concentration you calculated (mg/mL)<input name="conc" type="number" step="0.001" min="0" required></label><div></div><div class="infusion-step">STEP 3 — SELECT DOSE AND TUBING</div><label>Desired maintenance dose (mg/min)<input name="desired" type="number" step="0.1" min="0" required></label><label>Tubing selected (gtt/mL)<select name="drop"><option>10</option><option>60</option></select></label><div class="infusion-step">STEP 4 — CALCULATE GRAVITY RATE</div><label>Drip rate to run (gtt/min)<input name="gtt" type="number" step="1" min="0" required></label><div class="math-note">The trainer does not require one memorized amiodarone bag concentration. It calculates what the patient actually receives from the amount drawn, bag volume, tubing, and gtt/min. The maintenance target is 1 mg/min.</div><button class="student-submit-btn">START INFUSION</button></form>`);
+  m.querySelector('form').onsubmit=ev=>{ev.preventDefault();const fd=new FormData(ev.currentTarget);const mg=Number(fd.get('mg')),drugVol=Number(fd.get('drugVol')),bag=Number(fd.get('bag')),enteredConc=Number(fd.get('conc')),drop=Number(fd.get('drop')),desired=Number(fd.get('desired')),gtt=Number(fd.get('gtt'));
+    const actualMg=drugVol*f.conc;const actualConc=actualMg/bag;const actualDose=gtt*actualConc/drop;
+    const statedAmountMatchesVial=mg>0&&near(mg,actualMg,Math.max(0.5,actualMg*0.01));
+    const concentrationMathOK=enteredConc>0&&near(enteredConc,actualConc,Math.max(0.005,actualConc*0.02));
+    const desiredOK=near(desired,1,0.05);
+    const tubingOK=drop===10||drop===60;
+    const studentCalculatedGtt=enteredConc>0&&desiredOK?desired*drop/enteredConc:NaN;
+    const mathOK=Number.isFinite(studentCalculatedGtt)&&near(gtt,studentCalculatedGtt,1.1);
+    const deliveredDoseOK=Number.isFinite(actualDose)&&near(actualDose,1,0.08);
+    const executionOK=statedAmountMatchesVial&&concentrationMathOK&&desiredOK&&tubingOK&&mathOK&&deliveredDoseOK;
+    const valid=a.grade==='incorrect'?false:executionOK;
+    const details={mg,drugVol,bag,enteredConc,drop,desired,gtt,actualMg:round(actualMg,2),actualConc:round(actualConc,4),actualDose:round(actualDose,3),statedAmountMatchesVial,concentrationMathOK,desiredOK,tubingOK,mathOK,deliveredDoseOK,executionOK,expectedGtt:Number.isFinite(studentCalculatedGtt)?round(studentCalculatedGtt,1):null,summary:`${drugVol} mL (${round(actualMg,2)} mg actual) into ${bag} mL → ${round(actualConc,4)} mg/mL actual; ${drop} gtt set at ${gtt} gtt/min → actual ${round(actualDose,3)} mg/min`};
     recordAction(wrap,s,a,b,{actionId:a.id,label:a.label,time:s.elapsed,valid,grade:a.grade,details});m.remove()};
 }
 function openMagnesiumInfusionModal(wrap,s,a,b){
@@ -934,11 +957,18 @@ function infusionAARCells(s,a,r){
       correct:`<div class="calc-breakdown"><div><span class="calc-emphasis">No single bag concentration is required by the trainer.</span></div><div>Use the displayed vial concentration and an available NS bag to determine the actual final concentration.</div><div>Either 10 or 60 gtt/mL tubing is accepted.</div><div>Dose range: <span class="calc-emphasis">2–20 mcg/min, titrated</span>${d.desiredOK?`; selected target ${desiredText} is within range`:''}</div><div>For the mixture/tubing you entered, calculated rate: <span class="calc-emphasis">${expectedRate}</span></div><div>The physical setup must actually deliver approximately the selected dose.</div></div>`
     };
   }
+  if(a.infusionType==='amiodaroneMaintenance')return {entered:`<div class="calc-breakdown"><div>Drug entered: ${fmt(d.mg)} mg; volume drawn: ${fmt(d.drugVol)} mL → <span class="calc-emphasis">${fmt(d.actualMg)} mg actually added</span></div><div>Carrier bag: ${fmt(d.bag)} mL</div><div>Concentration entered: ${fmt(d.enteredConc)} mg/mL; <span class="calc-emphasis">actual mixture ${fmt(d.actualConc)} mg/mL</span></div><div>Tubing: ${fmt(d.drop)} gtt/mL</div><div>Desired dose: ${fmt(d.desired)} mg/min</div><div>Rate run: ${fmt(d.gtt)} gtt/min</div><div class="calc-emphasis">Actual delivered dose: ${fmt(d.actualDose)} mg/min</div></div>`,correct:`<div class="calc-breakdown"><div><span class="calc-emphasis">Target delivery: 1 mg/min</span></div><div>No single bag concentration is required by the trainer.</div><div>Use the displayed 50 mg/mL vial concentration to calculate the actual mixture.</div><div>Either 10 or 60 gtt/mL tubing is accepted.</div><div>For the mixture/tubing entered, calculated rate: <span class="calc-emphasis">${Number.isFinite(d.expectedGtt)?fmt(d.expectedGtt)+' gtt/min':'calculate from the concentration and selected tubing'}</span></div><div>The physical setup must actually deliver approximately 1 mg/min.</div></div>`};
   if(a.infusionType==='magnesiumTorsades')return {entered:`<div class="calc-breakdown"><div>${esc(d.summary||'Infusion entered')}</div><div class="calc-emphasis">Actual delivered magnesium: ${fmt(d.actualDose)} g/hr</div></div>`,correct:`<div class="calc-breakdown"><div><span class="calc-emphasis">Target delivery: 2 g/hr</span></div><div>No single bag concentration or tubing set is required by the trainer.</div><div>For the entered mL/hr and tubing, calculated gravity rate: <span class="calc-emphasis">${Number.isFinite(d.expectedGtt)?fmt(d.expectedGtt)+' gtt/min':'calculate from the selected rate and tubing'}</span></div></div>`};
   return {entered:esc(d.summary||'Calculation entered'),correct:esc(expectedActionText(s,a))};
 }
 function calcReviewCells(s,a,r){
   if(a.kind==='infusion')return infusionAARCells(s,a,r);
+  if(a.kind==='med'&&r){
+    const d=r.details||{};const checks=[];
+    if(d.doseOK===false)checks.push('dose');if(d.volOK===false)checks.push('draw volume');if(d.routeOK===false)checks.push('route');if(d.countOK===false)checks.push('unit count');if(d.timeOK===false)checks.push('administration time');if(d.flushOK===false)checks.push('flush');
+    const entered=`${esc(d.summary||'Medication entered')}${checks.length?`<div class="calc-subnote">Needs review: ${esc(checks.join(', '))}</div>`:''}`;
+    return {entered,correct:esc(expectedActionText(s,a))};
+  }
   return {entered:esc(r?.details?.summary||'No dose / calculation entered'),correct:esc(a.grade==='incorrect'?'Not indicated for this scenario.':expectedActionText(s,a))};
 }
 
