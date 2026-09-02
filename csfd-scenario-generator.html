@@ -262,7 +262,7 @@ const TOOLBOX_BANK=[
   decoySimple('tool-trauma-alert','Trauma Activation / Notification','Transport / Notification','EMT-B','trauma-alert'),
   decoySimple('tool-med-control','Contact Medical Control','Transport / Notification','EMT-B','medical-control','acceptable')
 ];
-function actionConcept(a){if(a.medKey)return `med:${a.medKey}`;if(a.infusionType)return `infusion:${a.infusionType}`;if(a.kind==='fluid')return 'simple:fluid';if(a.procedureType)return `procedure:${a.procedureType}`;if(a.concept){if(a.concept==='pacing'||a.concept==='chestDecompression')return `procedure:${a.concept}`;return `simple:${a.concept}`;}if(a.id==='iv')return 'simple:iv';if(a.id==='second-iv')return 'simple:second-iv';if(a.id.includes('stemi-alert'))return 'simple:stemi-alert';if(a.id.includes('sepsis-alert'))return 'simple:sepsis-alert';if(a.id==='bvm')return 'simple:bvm';if(a.id==='oxygen'||a.id==='oxygen-unneeded')return 'simple:oxygen';if(a.id==='transport')return 'simple:transport';return `simple:${a.id}`}
+function actionConcept(a){if(a.medKey)return `med:${a.medKey}`;if(a.infusionType)return `infusion:${a.infusionType}`;if(a.kind==='fluid')return a.concept?`simple:${a.concept}`:'simple:fluid';if(a.procedureType==='cpap')return 'simple:cpap';if(a.procedureType)return `procedure:${a.procedureType}`;if(a.concept){if(a.concept==='pacing'||a.concept==='chestDecompression')return `procedure:${a.concept}`;return `simple:${a.concept}`;}if(a.id==='iv')return 'simple:iv';if(a.id==='second-iv')return 'simple:second-iv';if(a.id.includes('stemi-alert'))return 'simple:stemi-alert';if(a.id.includes('sepsis-alert'))return 'simple:sepsis-alert';if(a.id==='bvm')return 'simple:bvm';if(a.id==='oxygen'||a.id==='oxygen-unneeded')return 'simple:oxygen';if(a.id==='transport')return 'simple:transport';return `simple:${a.id}`}
 function shuffled(a){const out=[...a];for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[out[i],out[j]]=[out[j],out[i]]}return out}
 function pickDistractors(s){
   const actual=(s.template.actions||[]).filter(a=>inScope(s.provider,a.minLevel||'EMT-B'));
@@ -588,6 +588,257 @@ const SCENARIOS=[
     deterioration:{seconds:240,requires:['preox'],text:'Fatigue worsens and oxygenation begins to fall. The airway plan must be executed deliberately.'},
     reassess:s=>s.hasValid('intubate')?'ET tube is confirmed with continuous EtCO₂ and bilateral lung sounds. Continue ventilatory and hemodynamic monitoring.':'The patient remains in severe respiratory failure.'
   }
+  ,{
+    id:'adult-stroke',condition:'Suspected Acute Stroke',type:'Medical',minLevel:'EMT-B',patientGroups:['Adult','Geriatric'],protocolRefs:['6.14 Adult Stroke','4.06 Cincinnati Prehospital Stroke Scale','VAN Stroke Assessment'],
+    dispatch:'Medic 1, respond to a residence for a {age} {sex} with sudden weakness and difficulty speaking.',
+    scene:'A family member reports the patient was normal earlier and then abruptly developed facial asymmetry, arm weakness, and abnormal speech.',
+    diagnosis:'Acute stroke syndrome requiring stroke-system activation and rapid transport',
+    initSession:s=>{s.vars.strokeSide=rnd(['left','right']);s.vars.lkn=Math.floor(Math.random()*75)+35;s.vars.strokeBP=Math.floor(Math.random()*25)+176;},
+    assessments:[
+      {id:'abcde',label:'Initial ABCDE / Vitals',critical:true,minLevel:'EMT-B',text:s=>`Airway patent. Breathing adequate. HR 88, BP ${s.vars.strokeBP}/96, RR 18, SpO₂ 93%. GCS 14 with confusion about the month.`},
+      {id:'stroke-exam',label:'Focused Neurologic Exam',critical:true,minLevel:'EMT-B',text:s=>`${s.vars.strokeSide==='left'?'Left':'Right'} facial droop and arm drift are present with dysarthric speech. No witnessed seizure activity.`},
+      {id:'bgl-stroke-assess',label:'Blood Glucose',critical:true,minLevel:'EMT-B',text:s=>'BGL 118 mg/dL.'},
+      {id:'history',label:'Last Known Normal / Medication History',critical:true,minLevel:'EMT-B',text:s=>`Last known normal was approximately ${s.vars.lkn} minutes before EMS arrival. Family denies recent trauma. Medication list is available for transport.`}
+    ],
+    actions:[
+      simple('cincinnati','Perform Cincinnati Stroke Scale','Assessment / Monitoring','critical','EMT-B'),
+      simple('van','Perform VAN Stroke Assessment','Assessment / Monitoring','critical','EMT-B'),
+      simple('lkn','Confirm Last Known Normal / Symptom Onset','Assessment / Monitoring','critical','EMT-B'),
+      simple('oxygen','Oxygen to Maintain SpO₂ >94%','Airway / Breathing','critical','EMT-B'),
+      simple('iv','Establish IV Access','Circulation','critical','AEMT'),
+      simple('second-iv','Second IV Access','Circulation','beneficial','AEMT'),
+      simple('cardiac-monitor-stroke','Cardiac Monitoring','Assessment / Monitoring','beneficial','Paramedic',{concept:'cardiac-monitor'}),
+      simple('stroke-alert','Stroke Alert / Prearrival Notification','Transport / Notification','critical','EMT-B',{concept:'stroke-alert'}),
+      simple('transport','Rapid Transport to Comprehensive Stroke Facility','Transport / Notification','critical','EMT-B')
+    ],
+    deterioration:{seconds:300,requires:['stroke-alert','transport'],text:'Neurologic deficits become more pronounced. Rapid stroke-system activation and transport remain the priority.'},
+    reassess:s=>'Neurologic deficits persist without airway compromise. Continue serial neurologic and vital-sign reassessment during rapid transport.'
+  },
+  {
+    id:'adult-chf',condition:'CHF / Cardiogenic Pulmonary Edema',type:'Medical',minLevel:'EMT-B',patientGroups:['Adult','Geriatric'],protocolRefs:['6.15 Adult Congestive Heart Failure / Pulmonary Edema','2.06 CPAP'],
+    dispatch:'Medic 1, respond for a {age} {sex} with severe shortness of breath that worsens when lying flat.',
+    scene:'The patient is sitting upright, anxious and diaphoretic, with obvious increased work of breathing and frothy sputum at the lips.',
+    diagnosis:'Acute cardiogenic pulmonary edema / CHF exacerbation',
+    initSession:s=>{s.vars.chfBP=Math.floor(Math.random()*35)+166;},
+    assessments:[
+      {id:'abcde',label:'Initial ABCDE / Vitals',critical:true,minLevel:'EMT-B',text:s=>`Airway patent. RR 32 and labored. HR 112, BP ${s.vars.chfBP}/104, SpO₂ 84% on room air. Patient cannot tolerate lying flat.`},
+      {id:'lung',label:'Lung Sounds / Respiratory Exam',critical:true,minLevel:'EMT-B',text:s=>'Diffuse bilateral coarse crackles/rales with JVD and lower-extremity edema. No focal unilateral loss of breath sounds.'},
+      {id:'history',label:'Cardiac / Medication History',critical:true,minLevel:'EMT-B',text:s=>'Known CHF. Denies sildenafil/Viagra, vardenafil/Levitra, tadalafil/Cialis, or pulmonary-hypertension medications. No recent trauma or drowning.'},
+      {id:'ecg',label:'Obtain 12-Lead ECG',critical:true,minLevel:'Paramedic',repeatable:true,ecg:true}
+    ],
+    ecgSeries:[{rhythm:'Sinus tachycardia',rate:()=>Math.floor(Math.random()*18)+104,qrs:'Narrow',territory:'None',st:{},note:'Sinus tachycardia without STEMI criteria.'}],ecgRequiredCount:1,
+    actions:[
+      simple('oxygen','Titrate Oxygen for Hypoxemia','Airway / Breathing','critical','EMT-B'),
+      procedure('cpap-chf','Apply CPAP','Airway / Breathing','cpap','critical','EMT-B',{pressureRange:[8,15]}),
+      simple('iv','Establish IV Access','Circulation','critical','AEMT'),
+      med('nitro-chf','Nitroglycerin','Medications','nitro','critical','Paramedic',s=>medExpected({dose:0.4,unit:'mg',route:['SL'],count:1})),
+      med('mag-chf','Magnesium Sulfate','Medications','magnesium','beneficial','Paramedic',s=>medExpected({dose:2,unit:'g',route:['IV'],adminTime:2})),
+      simple('transport','Transport / Continuous Monitoring','Transport / Notification','critical','EMT-B')
+    ],
+    deterioration:{seconds:240,requires:['cpap-chf'],text:'Work of breathing worsens and oxygen saturation falls further without effective positive-pressure support.'},
+    reassess:s=>s.hasValid('cpap-chf')?'Work of breathing decreases and oxygenation improves on CPAP. Continue frequent BP and respiratory reassessment, especially after nitroglycerin.':'The patient remains in severe respiratory distress.'
+  },
+  {
+    id:'adult-asthma',condition:'Severe Asthma / Obstructive Respiratory Distress',type:'Medical',minLevel:'EMT-B',patientGroups:['Adult','Geriatric'],protocolRefs:['6.16 Adult Respiratory Distress','2.06 CPAP'],
+    dispatch:'Medic 1, respond for a {age} {sex} with severe wheezing and increasing difficulty speaking.',
+    scene:'The patient is tripod-positioned, speaking in short phrases, and using accessory muscles. They report a history of asthma and minimal relief from their home inhaler.',
+    diagnosis:'Severe asthma exacerbation with significant work of breathing',
+    assessments:[
+      {id:'abcde',label:'Initial ABCDE / Vitals',critical:true,minLevel:'EMT-B',text:s=>'Airway patent. RR 34 with marked accessory-muscle use, HR 126, BP 138/84, SpO₂ 89%. Speech is limited to short phrases.'},
+      {id:'lung',label:'Lung Sounds',critical:true,minLevel:'EMT-B',text:s=>'Diffuse expiratory wheezing with diminished air movement bilaterally. No crackles, JVD, or unilateral absent breath sounds.'},
+      {id:'capno',label:'EtCO₂ / Capnography',critical:true,minLevel:'AEMT',text:s=>'EtCO₂ 48 mmHg with an obstructive/shark-fin waveform.'},
+      {id:'ecg',label:'Obtain 12-Lead ECG',critical:false,minLevel:'Paramedic',repeatable:true,ecg:true}
+    ],
+    ecgSeries:[{rhythm:'Sinus tachycardia',rate:()=>Math.floor(Math.random()*16)+118,qrs:'Narrow',territory:'None',st:{},note:'Sinus tachycardia associated with respiratory distress.'}],
+    actions:[
+      simple('oxygen','Titrate Oxygen to Appropriate SpO₂','Airway / Breathing','critical','EMT-B'),
+      med('duoneb-asthma','Ipratropium / Albuterol (DuoNeb)','Medications','duoneb','critical','EMT-B',s=>medExpected({dose:1,unit:'unit dose',route:['NEB']})),
+      med('albuterol-asthma','Repeat Albuterol as Needed','Medications','albuterol','beneficial','EMT-B',s=>medExpected({dose:2.5,unit:'mg',route:['NEB']})),
+      procedure('cpap-asthma','Apply CPAP for Significant Work of Breathing','Airway / Breathing','cpap','critical','EMT-B',{pressureRange:[5,15]}),
+      simple('iv','Establish IV Access','Circulation','critical','AEMT'),
+      med('solumedrol-asthma','Methylprednisolone (Solu-Medrol)','Medications','solumedrol','critical','Paramedic',s=>medExpected({dose:125,unit:'mg',route:['IV']})),
+      med('mag-asthma','Magnesium Sulfate','Medications','magnesium','beneficial','Paramedic',s=>medExpected({dose:2,unit:'g',route:['IV'],adminTime:2})),
+      simple('transport','Rapid Transport / Continuous Monitoring','Transport / Notification','critical','EMT-B')
+    ],
+    deterioration:{seconds:240,requires:['duoneb-asthma','cpap-asthma'],text:'Air movement becomes quieter and the patient is tiring. Escalate respiratory support and prepare for an advanced airway if noninvasive care fails.'},
+    reassess:s=>s.hasValid('duoneb-asthma')&&s.hasValid('cpap-asthma')?'Wheezing remains but air movement and speech improve. Continue bronchodilator therapy, monitoring, and transport.':'The patient remains in severe obstructive respiratory distress.'
+  },
+  {
+    id:'adult-hypoglycemia',condition:'Adult Hypoglycemia with Altered Mental Status',type:'Medical',minLevel:'Paramedic',patientGroups:['Adult','Geriatric'],protocolRefs:['6.18 Adult Diabetic'],
+    dispatch:'Medic 1, respond for a {age} {sex} with confusion and diaphoresis.',
+    scene:'The patient is confused, sweaty, and unable to safely swallow medication. Family reports diabetes and poor oral intake today.',
+    diagnosis:'Symptomatic hypoglycemia requiring IV dextrose',
+    assessments:[
+      {id:'abcde',label:'Initial ABCDE / Vitals',critical:true,minLevel:'EMT-B',text:s=>'Airway patent. Breathing adequate. HR 108, BP 126/74, RR 18, SpO₂ 97%. Patient is confused and not safe for oral glucose.'},
+      {id:'bgl',label:'Blood Glucose',critical:true,minLevel:'EMT-B',text:s=>'BGL 38 mg/dL.'},
+      {id:'history',label:'Diabetic / Nutrition History',critical:false,minLevel:'EMT-B',text:s=>'Known diabetic. Family denies alcohol abuse or chronic malnutrition. No evidence of trauma.'}
+    ],
+    actions:[
+      simple('iv','Establish IV Access','Circulation','critical','AEMT'),
+      med('d10-adult','Dextrose 10%','Medications','d10','critical','Paramedic',s=>medExpected({dose:25,unit:'g',route:['IV']})),
+      simple('recheck-bgl','Recheck Blood Glucose','Assessment / Monitoring','critical','EMT-B',{concept:'bgl'}),
+      simple('transport','Transport / Continued Monitoring','Transport / Notification','critical','EMT-B')
+    ],
+    onAction:(s,r)=>{if(r.valid&&r.actionId==='d10-adult')s.vars.glucoseCorrected=true},
+    reassess:s=>s.vars.glucoseCorrected?'Mental status improves substantially. Repeat glucose is 92 mg/dL. Continue monitoring and transport.':'The patient remains confused and diaphoretic.'
+  },
+  {
+    id:'adult-seizure',condition:'Adult Active Seizure',type:'Medical',minLevel:'Paramedic',patientGroups:['Adult','Geriatric'],protocolRefs:['6.19 Adult Seizures'],
+    dispatch:'Medic 1, respond for a {age} {sex} actively seizing.',
+    scene:'The patient is having generalized tonic-clonic activity. Bystanders report continuous seizure activity for several minutes.',
+    diagnosis:'Active generalized seizure requiring benzodiazepine therapy',
+    assessments:[
+      {id:'abcde',label:'Initial ABCDE / Vitals',critical:true,minLevel:'EMT-B',text:s=>'Airway requires active protection during seizure activity. HR 132, BP 146/88, SpO₂ 93% with assisted oxygenation.'},
+      {id:'bgl',label:'Blood Glucose',critical:true,minLevel:'EMT-B',text:s=>'BGL 108 mg/dL.'},
+      {id:'cause',label:'Cause / Trauma / Pregnancy Assessment',critical:true,minLevel:'EMT-B',text:s=>'No evidence of recent trauma. Patient is afebrile. No known pregnancy. Family reports a seizure disorder with missed anticonvulsant doses.'}
+    ],
+    actions:[
+      simple('protect-seizure','Protect Patient / Support Airway and Oxygenation','Airway / Breathing','critical','EMT-B',{concept:'oxygen'}),
+      simple('iv','Establish IV Access','Circulation','critical','AEMT'),
+      med('versed-adult-seizure','Midazolam for Active Seizure','Medications','midazolam','critical','Paramedic',s=>medExpected({dose:2,unit:'mg',route:['IV'],adminTime:2})),
+      simple('cardiac-monitor-seizure','Cardiac Monitoring','Assessment / Monitoring','beneficial','Paramedic',{concept:'cardiac-monitor'}),
+      simple('transport','Rapid Transport / Monitor for Recurrent Seizure','Transport / Notification','critical','EMT-B')
+    ],
+    onAction:(s,r)=>{if(r.valid&&r.actionId==='versed-adult-seizure')s.vars.seizureStopped=true},
+    reassess:s=>s.vars.seizureStopped?'Seizure activity stops. The patient is postictal; continue airway, respiratory, and recurrent-seizure monitoring.':'Generalized seizure activity continues.'
+  },
+  {
+    id:'adult-opioid-overdose',condition:'Opioid Overdose with Respiratory Depression',type:'Medical',minLevel:'EMT-B',patientGroups:['Adult','Geriatric'],protocolRefs:['6.25 Adult Overdose / Poisoning'],
+    dispatch:'Medic 1, respond for a {age} {sex} found poorly responsive with slow breathing.',
+    scene:'The patient is minimally responsive with markedly depressed respirations. Drug paraphernalia is present nearby, but the exact substance is not confirmed.',
+    diagnosis:'Suspected opioid poisoning with respiratory depression',
+    assessments:[
+      {id:'abcde',label:'Initial ABCDE / Vitals',critical:true,minLevel:'EMT-B',text:s=>'Airway is not self-protected. Respirations 6/min and shallow, HR 58, BP 104/66, SpO₂ 78%. Pinpoint pupils are present.'},
+      {id:'bgl',label:'Blood Glucose',critical:true,minLevel:'EMT-B',text:s=>'BGL 102 mg/dL.'},
+      {id:'tox-history',label:'Scene / Ingestion History',critical:true,minLevel:'EMT-B',text:s=>'Possible opioid exposure. No evidence of stimulant toxidrome, organophosphate exposure, or tricyclic medication at the scene.'}
+    ],
+    actions:[
+      simple('bvm','Assist Ventilations with BVM and Oxygen','Airway / Breathing','critical','EMT-B',{concept:'bvm'}),
+      simple('iv','Establish IV Access','Circulation','critical','AEMT'),
+      med('naloxone-opioid','Naloxone Titrated to Respiratory Response','Medications','naloxone','critical','Paramedic',s=>medExpected({range:[1,2],unit:'mg',route:['IV']})),
+      simple('transport','Transport / Monitor Airway for Recurrent Depression','Transport / Notification','critical','EMT-B')
+    ],
+    onAction:(s,r)=>{if(r.valid&&r.actionId==='naloxone-opioid')s.vars.respImproved=true},
+    reassess:s=>s.vars.respImproved?'Respiratory rate improves to 12/min with better tidal volume. The patient remains drowsy; continue airway monitoring and titrate additional naloxone only to respiratory effect if needed.':'Respiratory depression persists.'
+  },
+  {
+    id:'adult-head-injury',condition:'Adult Head / Spinal Injury',type:'Trauma',minLevel:'EMT-B',patientGroups:['Adult','Geriatric'],protocolRefs:['5.02 Adult Head / Spinal Injury','2.17 Spinal Immobilization','1.12 Pre-hospital Triage and Bypass Algorithm'],
+    dispatch:'Medic 1, respond to a construction site for a {age} {sex} who fell from height.',
+    scene:'The patient fell approximately 22 feet and is found supine, confused, complaining of head and neck pain.',
+    diagnosis:'Blunt head injury with altered mental status and cervical-spine risk',
+    traumaProfile:{blunt:true,gcs:13,sbp:118,adultFallOver20:true,midlineTenderness:true,altered:true,severeTrauma:true,distractingInjury:false},
+    assessments:[
+      {id:'abcde',label:'Initial ABCDE / GCS / Vitals',critical:true,minLevel:'EMT-B',text:s=>'Airway patent. RR 20, HR 96, BP 118/76, SpO₂ 95%. GCS 13 (E3 V4 M6).'},
+      {id:'neuro',label:'Pupils / Focused Neurologic Exam',critical:true,minLevel:'EMT-B',text:s=>'Pupils equal and reactive. No unilateral motor deficit. Patient repeatedly asks what happened.'},
+      {id:'spine',label:'Spinal / Injury Assessment',critical:true,minLevel:'EMT-B',text:s=>'Midline cervical tenderness is present. No obvious spinal deformity. No focal numbness or weakness.'},
+      {id:'bgl-head',label:'Blood Glucose',critical:false,minLevel:'EMT-B',text:s=>'BGL 116 mg/dL.'},
+      {id:'capno-head',label:'Capnography',critical:false,minLevel:'AEMT',text:s=>'EtCO₂ 38 mmHg with regular spontaneous respirations.'}
+    ],
+    actions:[
+      simple('smr-head','Spinal Motion Restriction','Trauma / Procedures','critical','EMT-B',{concept:'smr'}),
+      simple('head-elevate','Elevate Head of Stretcher to 30 Degrees','Trauma / Procedures','critical','EMT-B'),
+      simple('iv','Establish IV Access','Circulation','critical','AEMT'),
+      simple('trauma-alert-head','Trauma Activation / Notification','Transport / Notification','critical','EMT-B',{concept:'trauma-alert'}),
+      simple('transport','Rapid Transport / Limit Scene Time','Transport / Notification','critical','EMT-B')
+    ],
+    deterioration:{seconds:300,requires:['transport'],text:'The patient becomes more somnolent. Reassess airway, ventilation, pupils, GCS, and expedite transport.'},
+    reassess:s=>'GCS remains 13 with persistent headache and cervical tenderness. Continue serial neurologic and airway reassessment.'
+  },
+  {
+    id:'adult-femur-fracture',condition:'Isolated Femur Fracture',type:'Trauma',minLevel:'EMT-B',patientGroups:['Adult','Geriatric'],protocolRefs:['5.01 Adult Extremity Trauma','2.15 Pain Management'],
+    dispatch:'Medic 1, respond for a {age} {sex} with a leg injury after a fall.',
+    scene:'The patient has severe isolated thigh pain and visible mid-shaft deformity after a fall. No other major trauma is identified.',
+    diagnosis:'Closed mid-shaft femur fracture appropriate for traction splinting',
+    traumaProfile:{blunt:true,gcs:15,sbp:132,severeTrauma:false,midlineTenderness:false,altered:false,distractingInjury:false},
+    assessments:[
+      {id:'abcde',label:'Initial ABCDE / Vitals',critical:true,minLevel:'EMT-B',text:s=>'Airway and breathing are normal. HR 104, BP 132/82, RR 20, SpO₂ 98%. GCS 15.'},
+      {id:'pms',label:'Distal Pulse / Motor / Sensory Exam',critical:true,minLevel:'EMT-B',text:s=>'Distal pulse is present with intact motor and sensation. Skin distal to the injury is warm.'},
+      {id:'injury',label:'Focused Extremity Exam',critical:true,minLevel:'EMT-B',text:s=>'Closed isolated mid-shaft femur deformity. No injury to the hip, knee, lower leg, or foot. No open wound.'}
+    ],
+    actions:[
+      simple('traction-femur','Apply Traction Splint','Trauma / Procedures','critical','EMT-B',{concept:'traction-splint'}),
+      simple('repeat-pms','Repeat Distal PMS after Splinting','Assessment / Monitoring','critical','EMT-B'),
+      simple('iv','Establish IV Access','Circulation','critical','AEMT'),
+      med('fentanyl-femur','Fentanyl for Pain','Medications','fentanyl','beneficial','Paramedic',s=>medExpected({unit:'mcg',route:['IV','IO','IM','IN'],alternatives:[{dose:s.patient.weight,route:['IV','IO','IV/IO'],adminTime:1},{dose:2*s.patient.weight,route:['IM','IN']}]})),
+      simple('transport','Transport / Monitor Neurovascular Status','Transport / Notification','critical','EMT-B')
+    ],
+    reassess:s=>s.hasValid('traction-femur')?'Alignment and pain improve after traction; distal PMS remains intact.':'Severe thigh pain and deformity persist.'
+  },
+  {
+    id:'adult-burn',condition:'Adult Thermal Burn',type:'Trauma',minLevel:'EMT-B',patientGroups:['Adult','Geriatric'],protocolRefs:['5.05 Adult Burn','2.15 Pain Management'],
+    dispatch:'Medic 1, respond for a {age} {sex} burned in a flash fire.',
+    scene:'The fire has been extinguished. The patient has painful partial-thickness burns involving the anterior torso and portions of both upper extremities.',
+    diagnosis:'Serious-to-critical partial-thickness thermal burn requiring burn-size calculation and fluid therapy',
+    traumaProfile:{blunt:false,gcs:15,sbp:126,severeTrauma:false,qualifyingBurn:false},
+    initSession:s=>{s.vars.tbsa=rnd([16,17,18,19]);s.vars.idealBodyWeight=rnd([60,65,70,75,80]);},
+    assessments:[
+      {id:'abcde',label:'Initial ABCDE / Vitals',critical:true,minLevel:'EMT-B',text:s=>'Airway patent with normal voice and no soot in the mouth. HR 112, BP 126/78, RR 22, SpO₂ 97%. GCS 15.'},
+      {id:'burn-size',label:'Determine Burn Depth / TBSA',critical:true,minLevel:'EMT-B',text:s=>`Partial-thickness burn involving ${s.vars.tbsa}% TBSA. No full-thickness component is identified. Protocol ideal body weight for fluid calculation: ${s.vars.idealBodyWeight} kg.`},
+      {id:'airway-burn',label:'Assess for Inhalation Injury',critical:true,minLevel:'EMT-B',text:s=>'No facial burns, singed nasal hairs, hoarseness, stridor, soot, or enclosed-space smoke exposure.'},
+      {id:'associated',label:'Assess for Associated Trauma / Circumferential Injury',critical:false,minLevel:'EMT-B',text:s=>'No associated traumatic injury and no circumferential extremity burn.'}
+    ],
+    actions:[
+      simple('stop-burn','Stop Burning Process / Remove Non-adherent Jewelry and Clothing','Trauma / Procedures','critical','EMT-B'),
+      simple('dry-dressing','Cover >10% TBSA Burn with Sterile Dry Dressing / Burn Sheet','Trauma / Procedures','critical','EMT-B'),
+      simple('iv','Establish IV Access Preferably in Non-burned Area','Circulation','critical','AEMT'),
+      fluid('burn-fluid','Calculate Initial Burn Fluid Volume (2-hour total)','Vascular / Fluids / Blood','critical','AEMT',s=>s.vars.idealBodyWeight*s.vars.tbsa,{concept:'burn-fluid',unit:'mL',calcNote:s=>`CSFD burn formula in this protocol: ideal body weight (${s.vars.idealBodyWeight} kg) × %TBSA (${s.vars.tbsa}). Give total over 2 hours unless shock requires BP-directed flow.`}),
+      med('fentanyl-burn','Fentanyl for Burn Pain','Medications','fentanyl','beneficial','Paramedic',s=>medExpected({unit:'mcg',route:['IV','IO','IM','IN'],alternatives:[{dose:s.patient.weight,route:['IV','IO','IV/IO'],adminTime:1},{dose:2*s.patient.weight,route:['IM','IN']}]})),
+      simple('transport','Transport / Prevent Hypothermia','Transport / Notification','critical','EMT-B')
+    ],
+    reassess:s=>'Airway remains patent. Reassess pain, temperature, perfusion, and burn areas while preventing hypothermia.'
+  },
+  {
+    id:'adult-drowning',condition:'Adult Drowning / Post-Submersion Respiratory Distress',type:'Trauma',minLevel:'EMT-B',patientGroups:['Adult','Geriatric'],protocolRefs:['5.07 Adult Drowning','2.17 Spinal Immobilization'],
+    dispatch:'Medic 1, respond to a pool for a {age} {sex} pulled from the water after submersion.',
+    scene:'The patient is awake but coughing forcefully with severe dyspnea after being pulled from the water. Witnesses report a head-first entry into the pool.',
+    diagnosis:'Drowning with post-submersion respiratory distress and spinal-injury concern',
+    traumaProfile:{blunt:true,gcs:15,sbp:124,midlineTenderness:true,altered:false,severeTrauma:false},
+    assessments:[
+      {id:'abcde',label:'Initial ABCDE / Vitals',critical:true,minLevel:'EMT-B',text:s=>'Airway patent. RR 32 and labored, HR 118, BP 124/76, SpO₂ 84%. Frequent coughing is present.'},
+      {id:'lung',label:'Lung Sounds',critical:true,minLevel:'EMT-B',text:s=>'Diffuse rales with scattered wheezing bilaterally.'},
+      {id:'spine-drown',label:'Spinal Assessment / Mechanism',critical:true,minLevel:'EMT-B',text:s=>'Patient reports midline neck pain after a head-first entry into the water. No focal neurologic deficit.'},
+      {id:'capno-drown',label:'Capnography',critical:false,minLevel:'EMT-B',text:s=>'EtCO₂ 31 mmHg with tachypneic waveform.'}
+    ],
+    actions:[
+      simple('oxygen','Oxygen for Hypoxemia','Airway / Breathing','critical','EMT-B'),
+      simple('smr-drown','Spinal Motion Restriction','Trauma / Procedures','critical','EMT-B',{concept:'smr'}),
+      procedure('cpap-drown','Apply CPAP for Respiratory Distress','Airway / Breathing','cpap','critical','EMT-B',{pressureRange:[12.5,15]}),
+      med('albuterol-drown','Albuterol','Medications','albuterol','beneficial','EMT-B',s=>medExpected({dose:2.5,unit:'mg',route:['NEB']})),
+      simple('iv','Establish IV Access','Circulation','critical','AEMT'),
+      simple('cardiac-monitor-drown','Cardiac Monitoring','Assessment / Monitoring','beneficial','Paramedic',{concept:'cardiac-monitor'}),
+      simple('transport','Rapid Transport — All Drowning/Submersion Patients','Transport / Notification','critical','EMT-B')
+    ],
+    deterioration:{seconds:300,requires:['cpap-drown','transport'],text:'Respiratory distress worsens with increasing rales. Post-submersion pulmonary edema can progress after the initial rescue.'},
+    reassess:s=>s.hasValid('cpap-drown')?'Oxygenation and work of breathing improve on high-PEEP CPAP. Continue rapid transport and close respiratory monitoring.':'The patient remains hypoxemic with significant work of breathing.'
+  },
+  {
+    id:'adult-crush',condition:'Prolonged Crush Injury',type:'Trauma',minLevel:'AEMT',patientGroups:['Adult','Geriatric'],protocolRefs:['5.08 Adult Crush Injury'],
+    dispatch:'Medic 1, respond to an industrial rescue for a {age} {sex} trapped under heavy equipment.',
+    scene:'The patient has had one lower extremity continuously compressed for more than two hours. Rescue crews are preparing to lift the load.',
+    diagnosis:'Prolonged crush injury with risk of post-release metabolic deterioration',
+    traumaProfile:{blunt:true,gcs:15,sbp:110,severeTrauma:true,anticipateBlood:false,providerJudgment:false},
+    initSession:s=>{s.vars.entrapmentMinutes=Math.floor(Math.random()*75)+130;},
+    assessments:[
+      {id:'abcde',label:'Initial ABCDE / Vitals',critical:true,minLevel:'EMT-B',text:s=>'Airway patent. HR 112, BP 110/70, RR 22, SpO₂ 96%. GCS 15.'},
+      {id:'crush-time',label:'Determine Entrapment Duration',critical:true,minLevel:'EMT-B',text:s=>`Continuous compression has lasted approximately ${s.vars.entrapmentMinutes} minutes.`},
+      {id:'pms-crush',label:'Distal Neurovascular Exam',critical:true,minLevel:'EMT-B',text:s=>'Affected extremity is cool and pale with markedly diminished distal pulse and paresthesia.'},
+      {id:'ecg',label:'Obtain / Repeat 12-Lead ECG',critical:true,minLevel:'Paramedic',repeatable:true,ecg:true}
+    ],
+    ecgSeries:[{rhythm:'Sinus tachycardia',rate:()=>Math.floor(Math.random()*15)+104,qrs:'Narrow',territory:'None',st:{},note:'Sinus tachycardia before release; monitor closely for post-release changes.'}],ecgRequiredCount:1,
+    actions:[
+      simple('iv','Establish IV Access Before Release','Circulation','critical','AEMT'),
+      fluid('crush-bolus','Pre-release Normal Saline Bolus','Vascular / Fluids / Blood','critical','AEMT',s=>20*s.patient.weight,{concept:'crush-bolus',unit:'mL',calcNote:s=>'Entrapment >2 hours: 20 mL/kg normal saline before release.'}),
+      med('bicarb-crush','Sodium Bicarbonate','Medications','sodiumBicarb','critical','Paramedic',s=>medExpected({dose:s.patient.weight,unit:'mEq',route:['IV']})),
+      simple('release-crush','Coordinate Controlled Release after Pretreatment','Trauma / Procedures','critical','EMT-B'),
+      fluid('crush-post-fluid','Post-release Normal Saline Rate','Vascular / Fluids / Blood','critical','AEMT',s=>5*s.patient.weight,{concept:'crush-post-fluid',unit:'mL/hr',calcNote:s=>'After the patient is freed: normal saline at 5 mL/kg/hr.'}),
+      med('versed-crush','Midazolam for Sedation if Needed','Medications','midazolam','beneficial','Paramedic',s=>medExpected({dose:2,unit:'mg',route:['IV'],adminTime:2})),
+      med('fentanyl-crush','Fentanyl for Pain','Medications','fentanyl','beneficial','Paramedic',s=>medExpected({unit:'mcg',route:['IV','IO','IM','IN'],alternatives:[{dose:s.patient.weight,route:['IV','IO','IV/IO'],adminTime:1},{dose:2*s.patient.weight,route:['IM','IN']}]})),
+      simple('transport','Rapid Transport / Continuous ECG, SpO₂ and BP Monitoring','Transport / Notification','critical','EMT-B')
+    ],
+    deterioration:{seconds:360,requires:['iv','crush-bolus','bicarb-crush'],text:'Release without adequate preparation risks abrupt metabolic and hemodynamic deterioration. Complete protocol-directed pretreatment before extrication when circumstances permit.'},
+    reassess:s=>'After release, reassess rhythm, perfusion, distal neurovascular status, pain, and blood pressure continuously while maintaining post-release fluids.'
+  }
+
 ];
 
 function buildSession(template,patient,provider,mode,progression){
@@ -632,12 +883,12 @@ function traumaDecision(s){
   return {levelI,levelII,activation,smr,secondIVRequired,secondIVBeneficial};
 }
 function gradeFor(s,a){
-  let g=a.grade;
+  let g=typeof a.grade==='function'?a.grade(s):a.grade;
   const td=traumaDecision(s);
   if(!td)return g;
   const c=actionConcept(a);
   if(c==='simple:trauma-alert')return td.activation?'critical':'acceptable';
-  if(c==='simple:smr')return td.smr?'beneficial':'acceptable';
+  if(c==='simple:smr')return td.smr?(g==='critical'?'critical':'beneficial'):'acceptable';
   if(c==='simple:second-iv')return td.secondIVRequired?'critical':td.secondIVBeneficial?'beneficial':'acceptable';
   return g;
 }
@@ -656,7 +907,7 @@ function expectedActionText(s,a){
     if(e.alternatives?.length)return `${a.label}: ${e.alternatives.map(formatOne).join(' OR ')}`;
     return `${a.label}: ${formatOne(e)}`;
   }
-  if(a.kind==='fluid')return `${a.label}: ${fmt(a.expected(s))} mL`;
+  if(a.kind==='fluid')return `${a.label}: ${fmt(a.expected(s))} ${a.unit||'mL'}`;
   if(a.kind==='infusion'){
     if(a.infusionType==='norepi')return 'Norepinephrine: deliver 2-20 mcg/min titrated. Any correctly calculated mixture and available tubing setup is accepted when the actual delivered dose matches the selected dose.';
     if(a.infusionType==='amiodaroneMaintenance')return 'Amiodarone maintenance infusion: deliver 1 mg/min. Any correctly calculated concentration and 10 or 60 gtt/mL tubing setup is accepted when the physical setup actually delivers 1 mg/min.';
@@ -664,6 +915,7 @@ function expectedActionText(s,a){
   }
   if(a.kind==='procedure'){
     if(a.procedureType==='chestDecompression')return `Chest decompression: ${a.side||'affected'} side; preferred 4th-5th ICS anterior axillary line or secondary 2nd ICS mid-clavicular. Use the department-issued ARS decompression device.`;
+    if(a.procedureType==='cpap')return `CPAP: select a pressure within the protocol-appropriate range (${fmt((a.pressureRange||[5,15])[0])}-${fmt((a.pressureRange||[5,15])[1])} cm H₂O) and reassess work of breathing.`;
     if(a.procedureType==='pacing')return `TCP: rate 70 bpm; increase current until capture. Hidden simulated capture threshold: ${s.vars.captureThreshold} mA; verify mechanical capture.`;
     if(a.procedureType==='dsiPreox')return 'DSI preoxygenation: PEEP at least 5 cm H₂O and maintain SpO₂ >94% for at least 3 minutes.';
     if(a.procedureType==='intubation')return 'Intubation: no more than 2 attempts, second operator for attempt 2, confirm with EtCO₂ and lung/epigastric sounds.';
@@ -859,9 +1111,9 @@ function openDecoyMedicationModal(wrap,s,a,b){
 }
 
 function openFluidModal(wrap,s,a,b){
-  const expected=a.expected(s);const hint=s.mode==='FTO'?`<div class="fto-answer"><strong>Expected:</strong> ${fmt(expected)} mL</div>`:'';
-  const m=modalBase(a.label,`${hint}<div class="label-card">Patient weight: <strong>${s.patient.weight} kg</strong></div><form class="calc-form"><label>Volume to administer (mL)<input name="volume" type="number" step="1" min="0" required></label><button class="student-submit-btn" type="submit">ADMINISTER FLUID</button></form>`);
-  m.querySelector('form').onsubmit=ev=>{ev.preventDefault();const v=Number(new FormData(ev.currentTarget).get('volume'));const valid=near(v,expected,Math.max(25,expected*0.03));recordAction(wrap,s,a,b,{actionId:a.id,label:a.label,time:s.elapsed,valid,grade:gradeFor(s,a),details:{volume:v,summary:`${v} mL`}});m.remove()};
+  const expected=a.expected(s),unit=a.unit||'mL';const hint=s.mode==='FTO'?`<div class="fto-answer"><strong>Expected:</strong> ${fmt(expected)} ${esc(unit)}</div>`:'';
+  const m=modalBase(a.label,`${hint}<div class="label-card">Patient weight: <strong>${s.patient.weight} kg</strong>${a.calcNote?`<div>${esc(typeof a.calcNote==='function'?a.calcNote(s):a.calcNote)}</div>`:''}</div><form class="calc-form"><label>${unit==='mL/hr'?'Infusion rate':'Volume to administer'} (${esc(unit)})<input name="volume" type="number" step="0.1" min="0" required></label><button class="student-submit-btn" type="submit">ADMINISTER FLUID</button></form>`);
+  m.querySelector('form').onsubmit=ev=>{ev.preventDefault();const v=Number(new FormData(ev.currentTarget).get('volume'));const tol=unit==='mL/hr'?Math.max(5,expected*0.03):Math.max(25,expected*0.03);const valid=near(v,expected,tol);recordAction(wrap,s,a,b,{actionId:a.id,label:a.label,time:s.elapsed,valid,grade:gradeFor(s,a),details:{volume:v,unit,summary:`${fmt(v)} ${unit}`}});m.remove()};
 }
 
 function openProcedureModal(wrap,s,a,b){
@@ -869,6 +1121,10 @@ function openProcedureModal(wrap,s,a,b){
   if(a.procedureType==='chestDecompression'){
     body=`<div class="label-card">Affected side: <strong>${esc(a.side)}</strong><div>Equipment: <strong>Department-issued ARS decompression needle</strong></div></div><form class="calc-form"><label>Site<select name="site"><option>4th-5th ICS anterior axillary line</option><option>2nd ICS mid-clavicular line</option><option>5th ICS mid-axillary line</option></select></label><button class="student-submit-btn">PERFORM DECOMPRESSION</button></form>`;
     validator=fd=>{const site=fd.get('site');const siteOK=site.startsWith('4th-5th')||site.startsWith('2nd ICS');return{valid:siteOK,details:{site,summary:`${site} using department-issued ARS device`}}};
+  }else if(a.procedureType==='cpap'){
+    const range=a.pressureRange||[5,15];const hint=s.mode==='FTO'?`<div class="fto-answer"><strong>Expected pressure range:</strong> ${fmt(range[0])}-${fmt(range[1])} cm H₂O.</div>`:'';
+    body=`${hint}<form class="calc-form"><label>CPAP / PEEP setting (cm H₂O)<input name="pressure" type="number" step="0.5" min="0"></label><button class="student-submit-btn">APPLY CPAP</button></form>`;
+    validator=fd=>{const pressure=Number(fd.get('pressure'));return{valid:Number.isFinite(pressure)&&pressure>=range[0]&&pressure<=range[1],details:{pressure,summary:`CPAP at ${fmt(pressure)} cm H₂O`}}};
   }else if(a.procedureType==='pacing'){
     const hint=s.mode==='FTO'?`<div class="fto-answer"><strong>Simulated capture threshold:</strong> ${s.vars.captureThreshold} mA. Protocol pacing rate: 70 bpm.</div>`:'';
     body=`${hint}<form class="calc-form"><label>Pacing rate (bpm)<input name="rate" type="number" step="1"></label><label>Current at which electrical capture is achieved (mA)<input name="ma" type="number" step="1"></label><label class="check-row"><input name="mechanical" type="checkbox"> Verified mechanical capture with pulse / BP</label><button class="student-submit-btn">APPLY PACING</button></form>`;
@@ -999,7 +1255,7 @@ function buildWavePath(cfg,lead,w,h,base,st,rand,duration=2.5){
           mv+=shape.r*1.15*gauss(dt,-.025,.032)-shape.s*.85*gauss(dt,.035,.045)-shape.r*.42*gauss(dt,.105,.055)-shape.t*.45*gauss(dt,.30,.10);
         }else{
           const wide=cfg.qrs==='Wide';
-          if(rhythm==='Sinus rhythm')mv+=shape.p*.15*gauss(dt,-.17,.035);
+          if(rhythm==='Sinus rhythm'||rhythm==='Sinus bradycardia'||rhythm==='Sinus tachycardia'||rhythm==='Sinus arrhythmia')mv+=shape.p*.15*gauss(dt,-.17,.035);
           else if(rhythm==='Paced rhythm')mv+=1.25*gauss(dt,-.018,.0025);
           else if(rhythm==='SVT')mv+=-shape.p*.05*gauss(dt,.075,.018);
           if(wide){mv+=-shape.q*.25*gauss(dt,-.035,.018)+shape.r*.9*gauss(dt,.01,.035)-shape.s*.72*gauss(dt,.075,.040);}
